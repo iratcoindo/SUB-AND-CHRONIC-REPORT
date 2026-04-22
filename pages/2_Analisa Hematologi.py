@@ -64,11 +64,7 @@ def load_data(file, label):
     # ===============================
     df_filtered = df[df[df.columns[0]].isin(hematology_params)]
 
-    st.markdown(f"### 🔎 Filtered Data ({label})")
-    st.dataframe(df_filtered)
-
     if df_filtered.empty:
-        st.error(f"❌ Data kosong setelah filter ({label})")
         return None
 
     # ===============================
