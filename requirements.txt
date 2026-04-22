@@ -11,3 +11,4 @@ openai
 scipy
 scikit-posthocs
 pingouin
+openpyxl
