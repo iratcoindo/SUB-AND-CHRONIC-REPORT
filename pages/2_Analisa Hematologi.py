@@ -35,7 +35,10 @@ def load_data(file, label):
     else:
         df = pd.read_csv(file)
 
-    st.markdown(f"### 📄 Raw Data Preview ({label})")
+    # ===============================
+    # PREVIEW RAW
+    # ===============================
+    st.markdown(f"### 📄 Raw Data ({label})")
     st.dataframe(df.head())
 
     # ===============================
@@ -56,23 +59,23 @@ def load_data(file, label):
     # ===============================
     df.iloc[:,0] = df.iloc[:,0].astype(str).str.strip()
 
-    st.write(f"🔍 Unique parameter ({label}):")
-    st.write(df.iloc[:,0].unique())
-
     # ===============================
     # FILTER
     # ===============================
-    df = df[df[df.columns[0]].isin(hematology_params)]
+    df_filtered = df[df[df.columns[0]].isin(hematology_params)]
 
-    if df.empty:
+    st.markdown(f"### 🔎 Filtered Data ({label})")
+    st.dataframe(df_filtered)
+
+    if df_filtered.empty:
         st.error(f"❌ Data kosong setelah filter ({label})")
         return None
 
     # ===============================
     # MELT (LONG FORMAT)
     # ===============================
-    df_long = df.melt(
-        id_vars=df.columns[0],
+    df_long = df_filtered.melt(
+        id_vars=df_filtered.columns[0],
         var_name="Sample",
         value_name="Value"
     )
@@ -86,6 +89,9 @@ def load_data(file, label):
     # ===============================
     st.markdown(f"### 🧬 Structured Data ({label})")
     st.dataframe(df_long.head())
+
+    st.write(f"📊 Jumlah parameter: {df_long['Parameter'].nunique()}")
+    st.write(f"🧪 Jumlah sample: {df_long['Sample'].nunique()}")
 
     return df_long
 
