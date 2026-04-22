@@ -106,45 +106,51 @@ def run_analysis(df_all, title="Study"):
     st.header(f"🧬 {title}")
 
     # ===============================
-    # GROUP INPUT MANUAL
+# 🧬 GROUP INPUT (SIMPLE MODEL)
+# ===============================
+st.subheader("🧬 Group Setup")
+
+group_names = st.text_input(
+    "Group names (pisahkan koma)",
+    placeholder="Control, Dose1, Dose2",
+    key=f"{title}_groups"
+)
+
+rows_per_group = st.number_input(
+    "Rows per group",
+    value=6,
+    min_value=1,
+    key=f"{title}_rows"
+)
+
+if group_names:
+
+    groups = [g.strip() for g in group_names.split(",") if g.strip()]
+
+    labels = []
+    for g in groups:
+        labels += [g] * rows_per_group
+
     # ===============================
-    st.subheader("🧬 Group & Repetition Setup")
-
-    samples = sorted(df_all["Sample"].unique())
-
-    n_group = st.number_input("Jumlah Group", 1, 10, 2, key=f"{title}_ng")
-
-    group_map = {}
-    rep_map = {}
-
-    for i in range(n_group):
-
-        st.markdown(f"### Group {i+1}")
-
-        col1, col2 = st.columns(2)
-
-        gname = col1.text_input("Nama Group", f"Group {i+1}", key=f"{title}_g{i}")
-        reps  = col2.number_input("Jumlah Repetisi", 1, 100, 5, key=f"{title}_r{i}")
-
-        s_input = st.text_input(
-            "Isi Sample (contoh: 1,2,3 atau S1,S2)",
-            key=f"{title}_s{i}"
+    # VALIDASI
+    # ===============================
+    if len(labels) != df_all["Sample"].nunique():
+        st.warning(
+            f"⚠️ Jumlah data ({df_all['Sample'].nunique()}) "
+            f"tidak cocok dengan group ({len(labels)})"
         )
+    else:
+        # mapping berdasarkan urutan sample
+        sample_order = sorted(df_all["Sample"].unique())
 
-        if s_input:
-            items = [x.strip() for x in s_input.split(",")]
+        group_map = dict(zip(sample_order, labels))
 
-            for s in samples:
-                for item in items:
-                    if str(s).endswith(item):
-                        group_map[s] = gname
-                        rep_map[s] = reps
+        df_all["Group"] = df_all["Sample"].map(group_map)
 
-    df_all["Group"] = df_all["Sample"].map(group_map)
-    df_all["Repetition"] = df_all["Sample"].map(rep_map)
+        st.success("✅ Group berhasil di-assign")
 
-    st.subheader("📋 Mapping")
-    st.dataframe(df_all[["Sample","Group","Repetition"]].drop_duplicates())
+        st.subheader("📋 Group Mapping")
+        st.dataframe(df_all[["Sample","Group"]].drop_duplicates())
 
     # ===============================
     # AUTO REFERENCE RANGE
