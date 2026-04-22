@@ -87,9 +87,6 @@ def load_data(file, label):
     st.markdown(f"### 🧬 Structured Data ({label})")
     st.dataframe(df_long.head())
 
-    st.write(f"📊 Jumlah parameter: {df_long['Parameter'].nunique()}")
-    st.write(f"🧪 Jumlah sample: {df_long['Sample'].nunique()}")
-
     return df_long
 
 # ===============================
