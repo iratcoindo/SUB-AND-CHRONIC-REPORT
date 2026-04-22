@@ -106,51 +106,51 @@ def run_analysis(df_all, title="Study"):
     st.header(f"🧬 {title}")
 
     # ===============================
-# 🧬 GROUP INPUT (SIMPLE MODEL)
-# ===============================
-st.subheader("🧬 Group Setup")
-
-group_names = st.text_input(
-    "Group names (pisahkan koma)",
-    placeholder="Control, Dose1, Dose2",
-    key=f"{title}_groups"
-)
-
-rows_per_group = st.number_input(
-    "Rows per group",
-    value=6,
-    min_value=1,
-    key=f"{title}_rows"
-)
-
-if group_names:
-
-    groups = [g.strip() for g in group_names.split(",") if g.strip()]
-
-    labels = []
-    for g in groups:
-        labels += [g] * rows_per_group
-
+    # 🧬 GROUP INPUT (SIMPLE MODEL)
     # ===============================
-    # VALIDASI
-    # ===============================
-    if len(labels) != df_all["Sample"].nunique():
-        st.warning(
-            f"⚠️ Jumlah data ({df_all['Sample'].nunique()}) "
-            f"tidak cocok dengan group ({len(labels)})"
-        )
-    else:
-        # mapping berdasarkan urutan sample
-        sample_order = sorted(df_all["Sample"].unique())
-
-        group_map = dict(zip(sample_order, labels))
-
-        df_all["Group"] = df_all["Sample"].map(group_map)
-
-        st.success("✅ Group berhasil di-assign")
-
-        st.subheader("📋 Group Mapping")
-        st.dataframe(df_all[["Sample","Group"]].drop_duplicates())
+    st.subheader("🧬 Group Setup")
+    
+    group_names = st.text_input(
+        "Group names (pisahkan koma)",
+        placeholder="Control, Dose1, Dose2",
+        key=f"{title}_groups"
+    )
+    
+    rows_per_group = st.number_input(
+        "Rows per group",
+        value=6,
+        min_value=1,
+        key=f"{title}_rows"
+    )
+    
+    if group_names:
+    
+        groups = [g.strip() for g in group_names.split(",") if g.strip()]
+    
+        labels = []
+        for g in groups:
+            labels += [g] * rows_per_group
+    
+        # ===============================
+        # VALIDASI
+        # ===============================
+        if len(labels) != df_all["Sample"].nunique():
+            st.warning(
+                f"⚠️ Jumlah data ({df_all['Sample'].nunique()}) "
+                f"tidak cocok dengan group ({len(labels)})"
+            )
+        else:
+            # mapping berdasarkan urutan sample
+            sample_order = sorted(df_all["Sample"].unique())
+    
+            group_map = dict(zip(sample_order, labels))
+    
+            df_all["Group"] = df_all["Sample"].map(group_map)
+    
+            st.success("✅ Group berhasil di-assign")
+    
+            st.subheader("📋 Group Mapping")
+            st.dataframe(df_all[["Sample","Group"]].drop_duplicates())
 
     # ===============================
     # AUTO REFERENCE RANGE
