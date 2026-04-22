@@ -4,3 +4,7 @@ numpy
 pandas
 matplotlib
 seaborn
+streamlit-image-coordinates
+statsmodels
+streamlit-drawable-canvas
+openai
