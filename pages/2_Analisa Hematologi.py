@@ -36,10 +36,13 @@ def load_data(file, label):
         df = pd.read_csv(file)
 
     hematology_params = [
-        "WBC","Neu#","Lym#","Mon#","Eos#","Bas#",
-        "Neu%","Lym%","Mon%","Eos%","Bas%",
-        "RBC","HGB","HCT","MCV","MCH","MCHC",
-        "RDW-CV","RDW-SD","PLT","MPV","PDW","PCT"
+        "WBC (10^9/L)", "Neu # (10^9/L)", "Lym # (10^9/L)", 
+        "Mon # (10^9/L)", "Eos # (10^9/L)", "Bas # (10^9/L)", 
+        "Neu % ( )", "Lym % ( )", "Mon % ( )", "Eos % ( )", 
+        "Bas % ( )", "RBC (10^12/L)", "HGB (g/L)", "HCT ( )", 
+        "MCV (fL)", "MCH (pg)", "MCHC (g/L)", "RDW-CV ( )", 
+        "RDW-SD (fL)", "PLT (10^9/L)", "MPV (fL)", "PDW ( )", 
+        "PCT (mL/L)"
     ]
 
     df.iloc[:,0] = df.iloc[:,0].astype(str).str.strip()
