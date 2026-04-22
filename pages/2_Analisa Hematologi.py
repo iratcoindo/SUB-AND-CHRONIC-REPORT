@@ -23,18 +23,24 @@ st.subheader("🛰️ Satellite Data (Separate)")
 
 sat_file = st.file_uploader("Satellite Upload", type=["xlsx","csv"])
 
-# ===============================
-# FUNCTION LOAD
-# ===============================
 def load_data(file, label):
     if file is None:
         return None
     
+    # ===============================
+    # LOAD FILE
+    # ===============================
     if file.name.endswith(".xlsx"):
-        df = pd.read_excel(file)
+        df = pd.read_excel(file, engine="openpyxl")
     else:
         df = pd.read_csv(file)
 
+    st.markdown(f"### 📄 Raw Data Preview ({label})")
+    st.dataframe(df.head())
+
+    # ===============================
+    # PARAMETER LIST
+    # ===============================
     hematology_params = [
         "WBC (10^9/L)", "Neu # (10^9/L)", "Lym # (10^9/L)", 
         "Mon # (10^9/L)", "Eos # (10^9/L)", "Bas # (10^9/L)", 
@@ -45,9 +51,26 @@ def load_data(file, label):
         "PCT (mL/L)"
     ]
 
+    # ===============================
+    # CLEAN PARAMETER
+    # ===============================
     df.iloc[:,0] = df.iloc[:,0].astype(str).str.strip()
+
+    st.write(f"🔍 Unique parameter ({label}):")
+    st.write(df.iloc[:,0].unique())
+
+    # ===============================
+    # FILTER
+    # ===============================
     df = df[df[df.columns[0]].isin(hematology_params)]
 
+    if df.empty:
+        st.error(f"❌ Data kosong setelah filter ({label})")
+        return None
+
+    # ===============================
+    # MELT (LONG FORMAT)
+    # ===============================
     df_long = df.melt(
         id_vars=df.columns[0],
         var_name="Sample",
@@ -58,8 +81,16 @@ def load_data(file, label):
     df_long["Value"] = pd.to_numeric(df_long["Value"], errors="coerce")
     df_long["Timepoint"] = label
 
-    return df_long
+    # ===============================
+    # STRUCTURE PREVIEW
+    # ===============================
+    st.markdown(f"### 🧬 Structured Data ({label})")
+    st.dataframe(df_long.head())
 
+    st.write(f"📊 Jumlah parameter: {df_long['Parameter'].nunique()}")
+    st.write(f"🧪 Jumlah sample: {df_long['Sample'].nunique()}")
+
+    return df_long
 
 # ===============================
 # 🔁 REUSABLE ANALYSIS FUNCTION
