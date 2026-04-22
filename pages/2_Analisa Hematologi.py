@@ -112,29 +112,49 @@ def run_analysis(df_all, title="Main Study"):
     st.dataframe(df_all[["Sample","Group"]].drop_duplicates())
 
     # ===============================
-    # RANGE INPUT
+    # 📏 AUTO REFERENCE RANGE (FROM GROUP)
     # ===============================
-    st.subheader("📏 Reference Range")
-
+    st.subheader("📏 Auto Reference Range (From Group)")
+    
+    # pilih reference group
+    groups_available = df_all["Group"].dropna().unique()
+    
+    if len(groups_available) == 0:
+        st.warning("Belum ada group mapping")
+        return
+    
+    ref_group = st.selectbox("Pilih Reference Group", groups_available, key=f"{title}_ref")
+    
     parameters = df_all["Parameter"].unique()
     range_dict = {}
-
-    def parse_range2(text):
-        try:
-            low, high = text.split("-")
-            return float(low), float(high)
-        except:
-            return None, None
-
-    cols_per_row = 4
-
-    for i in range(0, len(parameters), cols_per_row):
-        subset = parameters[i:i+cols_per_row]
-        cols = st.columns(len(subset))
-
-        for j, param in enumerate(subset):
-            val = cols[j].text_input(param, key=f"{title}_{param}")
-            range_dict[param] = parse_range2(val)
+    
+    range_preview = []
+    
+    for param in parameters:
+    
+        df_param = df_all[
+            (df_all["Parameter"] == param) &
+            (df_all["Group"] == ref_group)
+        ]
+    
+        vals = df_param["Value"].dropna()
+    
+        if len(vals) > 0:
+            low = vals.min()
+            high = vals.max()
+        else:
+            low, high = None, None
+    
+        range_dict[param] = (low, high)
+    
+        range_preview.append({
+            "Parameter": param,
+            "Min": low,
+            "Max": high
+        })
+    
+    # tampilkan
+    st.dataframe(pd.DataFrame(range_preview))
 
     # ===============================
     # OUT OF RANGE
