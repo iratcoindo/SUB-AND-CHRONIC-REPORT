@@ -8,3 +8,6 @@ streamlit-image-coordinates
 statsmodels
 streamlit-drawable-canvas
 openai
+scipy
+scikit-posthocs
+pingouin
