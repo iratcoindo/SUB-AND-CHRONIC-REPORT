@@ -26,9 +26,6 @@ TARGET_COLS = [
     "PLT","MPV","PDW","PCT"
 ]
 
-# ===============================
-# 📦 LOAD FUNCTION (RAW FILTER)
-# ===============================
 def load_data(file, label):
     if file is None:
         return None
@@ -40,18 +37,32 @@ def load_data(file, label):
         else:
             df = pd.read_csv(file)
 
-        st.markdown(f"### 📄 Raw Data ({label})")
-        st.dataframe(df.head())
-
         # ===============================
         # CLEAN COLUMN NAME
         # ===============================
         df.columns = df.columns.astype(str).str.strip()
 
-        # mapping kolom tanpa spasi
+        # ===============================
+        # DETECT SAMPLE ID
+        # ===============================
+        possible_ids = ["Sample ID", "Sample", "ID", "Patient ID"]
+
+        sample_col = None
+        for c in possible_ids:
+            if c in df.columns:
+                sample_col = c
+                break
+
+        # fallback kalau tidak ada
+        if sample_col is None:
+            df["Sample ID"] = df.index.astype(str)
+            sample_col = "Sample ID"
+
+        # ===============================
+        # MATCH KOLOM TARGET
+        # ===============================
         col_map = {c.strip(): c for c in df.columns}
 
-        # ambil kolom yang cocok
         selected_cols = []
         for t in TARGET_COLS:
             if t in col_map:
@@ -62,19 +73,20 @@ def load_data(file, label):
             return None
 
         # ===============================
-        # FILTER DATA
+        # FILTER + SUSUN KOLOM
         # ===============================
-        df_filtered = df[selected_cols].copy()
+        df_filtered = df[[sample_col] + selected_cols].copy()
+        df_filtered = df_filtered.rename(columns={sample_col: "Sample ID"})
 
         # convert numeric
-        for c in df_filtered.columns:
+        for c in selected_cols:
             df_filtered[c] = pd.to_numeric(df_filtered[c], errors="coerce")
 
         # tambahkan label
         df_filtered["Source"] = label
 
         # ===============================
-        # OUTPUT
+        # OUTPUT (HANYA FILTERED)
         # ===============================
         st.markdown(f"### 🧬 Filtered Hematology ({label})")
         st.dataframe(df_filtered.head())
@@ -86,31 +98,3 @@ def load_data(file, label):
     except Exception as e:
         st.error(f"❌ Error loading {label}: {e}")
         return None
-
-
-# ===============================
-# 🚀 LOAD ALL
-# ===============================
-df_interim = load_data(interim_file, "Interim") if interim_file else None
-df_final   = load_data(final_file, "Final") if final_file else None
-df_sat     = load_data(sat_file, "Satellite") if sat_file else None
-
-# ===============================
-# 🔗 COMBINE
-# ===============================
-dfs = [d for d in [df_interim, df_final, df_sat] if d is not None]
-
-if len(dfs) > 0:
-    df_all = pd.concat(dfs, ignore_index=True)
-
-    st.markdown("---")
-    st.header("📊 Combined Data (Filtered)")
-
-    st.dataframe(df_all.head())
-
-    st.write("### 📈 Info")
-    st.write("Total rows:", df_all.shape[0])
-    st.write("Columns:", list(df_all.columns))
-
-else:
-    st.info("📭 Upload minimal satu file")
