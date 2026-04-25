@@ -2,18 +2,12 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(layout="wide")
-st.title("📊 Hematology Analyzer (Raw Filter Mode)")
+st.title("📊 Hematology Analyzer (Filtered + Sample ID)")
 
 # ===============================
 # 📥 UPLOAD
 # ===============================
-st.subheader("📥 Upload Data")
-
-col1, col2 = st.columns(2)
-interim_file = col1.file_uploader("Interim", type=["xlsx","csv"])
-final_file   = col2.file_uploader("Final", type=["xlsx","csv"])
-
-sat_file = st.file_uploader("Satellite", type=["xlsx","csv"])
+uploaded_file = st.file_uploader("Upload Data", type=["xlsx","csv"])
 
 # ===============================
 # 🎯 TARGET KOLOM
@@ -27,90 +21,87 @@ TARGET_COLS = [
 ]
 
 # ===============================
-# 📦 LOAD FUNCTION (RAW FILTER)
+# 📦 LOAD + FILTER
 # ===============================
-def load_data(file, label):
+def load_filtered(file):
     if file is None:
         return None
 
     try:
-        # LOAD
+        # ===============================
+        # LOAD FILE
+        # ===============================
         if file.name.endswith(".xlsx"):
             df = pd.read_excel(file, engine="openpyxl")
         else:
             df = pd.read_csv(file)
 
-        st.markdown(f"### 📄 Raw Data ({label})")
-        st.dataframe(df.head())
-
         # ===============================
-        # CLEAN COLUMN NAME
+        # CLEAN KOLOM
         # ===============================
         df.columns = df.columns.astype(str).str.strip()
 
-        # mapping kolom tanpa spasi
+        # ===============================
+        # DETECT SAMPLE ID
+        # ===============================
+        possible_ids = ["Sample ID", "Sample", "ID", "Patient ID"]
+
+        sample_col = None
+        for c in possible_ids:
+            if c in df.columns:
+                sample_col = c
+                break
+
+        # fallback → pakai index
+        if sample_col is None:
+            df["Sample ID"] = df.index.astype(str)
+            sample_col = "Sample ID"
+
+        # ===============================
+        # MATCH KOLOM TARGET
+        # ===============================
         col_map = {c.strip(): c for c in df.columns}
 
-        # ambil kolom yang cocok
         selected_cols = []
         for t in TARGET_COLS:
             if t in col_map:
                 selected_cols.append(col_map[t])
 
         if len(selected_cols) == 0:
-            st.error(f"❌ Tidak ada kolom hematologi ditemukan di {label}")
+            st.error("❌ Kolom hematologi tidak ditemukan")
             return None
 
         # ===============================
-        # FILTER DATA
+        # BUILD FINAL DATA
         # ===============================
-        df_filtered = df[selected_cols].copy()
+        df_final = df[[sample_col] + selected_cols].copy()
+        df_final = df_final.rename(columns={sample_col: "Sample ID"})
 
         # convert numeric
-        for c in df_filtered.columns:
-            df_filtered[c] = pd.to_numeric(df_filtered[c], errors="coerce")
-
-        # tambahkan label
-        df_filtered["Source"] = label
+        for c in selected_cols:
+            df_final[c] = pd.to_numeric(df_final[c], errors="coerce")
 
         # ===============================
         # OUTPUT
         # ===============================
-        st.markdown(f"### 🧬 Filtered Hematology ({label})")
-        st.dataframe(df_filtered.head())
+        st.success("✅ Filtered hematology siap dianalisa")
+        st.dataframe(df_final.head())
 
-        st.success(f"{label}: {df_filtered.shape[0]} rows loaded")
+        st.write("### 📈 Info")
+        st.write("Jumlah sampel:", df_final.shape[0])
+        st.write("Jumlah parameter:", len(selected_cols))
 
-        return df_filtered
+        return df_final
 
     except Exception as e:
-        st.error(f"❌ Error loading {label}: {e}")
+        st.error(f"❌ Error: {e}")
         return None
 
 
 # ===============================
-# 🚀 LOAD ALL
+# 🚀 RUN
 # ===============================
-df_interim = load_data(interim_file, "Interim") if interim_file else None
-df_final   = load_data(final_file, "Final") if final_file else None
-df_sat     = load_data(sat_file, "Satellite") if sat_file else None
+df_filtered = load_filtered(uploaded_file)
 
-# ===============================
-# 🔗 COMBINE
-# ===============================
-dfs = [d for d in [df_interim, df_final, df_sat] if d is not None]
-
-if len(dfs) > 0:
-    df_all = pd.concat(dfs, ignore_index=True)
-
-    st.markdown("---")
-    st.header("📊 Combined Data (Filtered)")
-
-    st.dataframe(df_all.head())
-
-    st.write("### 📈 Info")
-    st.write("Total rows:", df_all.shape[0])
-    st.write("Columns:", list(df_all.columns))
-
-else:
-    st.info("📭 Upload minimal satu file")
+if df_filtered is None:
+    st.info("📭 Upload file untuk memulai")
