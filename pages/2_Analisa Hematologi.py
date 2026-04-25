@@ -107,22 +107,7 @@ df_interim = load_data(interim_file, "Interim") if interim_file else None
 df_final   = load_data(final_file, "Final") if final_file else None
 df_sat     = load_data(sat_file, "Satellite") if sat_file else None
 
-# ===============================
-# 🔗 COMBINE
-# ===============================
-dfs = [d for d in [df_interim, df_final, df_sat] if d is not None]
-
-if len(dfs) > 0:
-    df_all = pd.concat(dfs, ignore_index=True)
-
-    st.markdown("---")
-    st.header("📊 Combined Data (Filtered)")
-
-    st.dataframe(df_all.head())
-
-    st.write("### 📈 Info")
-    st.write("Total rows:", df_all.shape[0])
-    st.write("Columns:", list(df_all.columns))
+ 
 
 else:
     st.info("📭 Upload minimal satu file")
