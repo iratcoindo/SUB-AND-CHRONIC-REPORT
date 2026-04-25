@@ -117,7 +117,7 @@ if len(dfs) > 0:
     st.markdown("---")
     st.header("📊 Combined Data (Filtered)")
 
-    st.dataframe(df_all.head())
+    st.dataframe(df_all.head,use_container_width=True)
 
     st.write("### 📈 Info")
     st.write("Total rows:", df_all.shape[0])
