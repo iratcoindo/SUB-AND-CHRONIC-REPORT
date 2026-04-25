@@ -227,94 +227,71 @@ if df_sat is not None and group_names_sat:
         st.dataframe(df_sat, use_container_width=True, height=500)
 
 # ===============================
-# 📊 VISUALISASI MAIN STUDY
+# 📊 BOXPLOT + STATISTIK
 # ===============================
-if 'df_main' in locals():
+st.markdown("---")
+st.header("📊 Boxplot & Statistik")
 
-    st.markdown("---")
-    st.header("📊 Visualization (Main Study)")
+param = st.selectbox("Pilih parameter", TARGET_COLS)
 
-    param = st.selectbox(
-        "Pilih parameter",
-        TARGET_COLS
-    )
+# ===============================
+# FUNCTION PLOT + STATS
+# ===============================
+def plot_box_and_stats(df, title):
 
-    # ===============================
-    # MEAN ± SD
-    # ===============================
-    summary = df_main.groupby(["Source","Group"])[param].agg(["mean","std"]).reset_index()
+    if df is None or "Group" not in df.columns:
+        st.info(f"{title} belum siap")
+        return
 
-    st.subheader("📈 Mean ± SD")
-    st.dataframe(summary)
+    st.subheader(title)
 
     # ===============================
-    # PLOT INTERIM & FINAL TERPISAH
+    # BOXPLOT
     # ===============================
     fig, ax = plt.subplots()
 
-    for source in df_main["Source"].unique():
-        data = summary[summary["Source"] == source]
-        ax.errorbar(
-            data["Group"],
-            data["mean"],
-            yerr=data["std"],
-            marker='o',
-            label=source
-        )
+    groups = sorted(df["Group"].dropna().unique())
+    data = [df[df["Group"] == g][param].dropna() for g in groups]
 
-    ax.set_title(f"{param} (Interim vs Final)")
+    ax.boxplot(data, labels=groups)
+    ax.set_title(f"{param} - {title}")
     ax.set_ylabel(param)
-    ax.legend()
 
     st.pyplot(fig)
 
     # ===============================
-    # ANOVA (OECD BASIC)
+    # MEAN ± SD
     # ===============================
-    st.subheader("🔬 Statistik (ANOVA)")
+    summary = df.groupby("Group")[param].agg(["mean","std","count"])
+    st.write("### Mean ± SD")
+    st.dataframe(summary)
 
-    groups_data = [
-        group[param].dropna().values
-        for name, group in df_main.groupby("Group")
-    ]
+    # ===============================
+    # ANOVA
+    # ===============================
+    if len(data) > 1:
+        f_val, p_val = stats.f_oneway(*data)
 
-    if len(groups_data) > 1:
-        f_val, p_val = stats.f_oneway(*groups_data)
-
+        st.write("### ANOVA")
         st.write(f"F-value: {f_val:.3f}")
         st.write(f"p-value: {p_val:.5f}")
 
         if p_val < 0.05:
-            st.warning("⚠️ Ada perbedaan signifikan antar group")
+            st.warning("⚠️ Signifikan (p < 0.05)")
         else:
-            st.success("✅ Tidak ada perbedaan signifikan")
+            st.success("✅ Tidak signifikan")
 
 # ===============================
-# 🛰️ FINAL vs SATELLITE
+# 📊 INTERIM
 # ===============================
-if df_sat is not None and df_final is not None and "Group" in df_sat.columns:
+plot_box_and_stats(df_interim, "Interim")
 
-    st.markdown("---")
-    st.header("🛰️ Satellite vs Final Comparison")
+# ===============================
+# 📊 FINAL
+# ===============================
+plot_box_and_stats(df_final, "Final")
 
-    param2 = st.selectbox("Parameter (Satellite)", TARGET_COLS, key="sat_param")
-
-    fig3, ax3 = plt.subplots()
-
-    groups_sat = df_sat["Group"].unique()
-
-    for g in groups_sat:
-        sat_mean = df_sat[df_sat["Group"]==g][param2].mean()
-
-        # cari group sama di final
-        final_mean = df_final[df_final["Group"]==g][param2].mean()
-
-        ax3.bar(
-            [f"{g}-Final", f"{g}-Sat"],
-            [final_mean, sat_mean]
-        )
-
-    ax3.set_title(f"{param2} (Final vs Satellite)")
-    ax3.set_ylabel(param2)
-
-    st.pyplot(fig3)
+# ===============================
+# 📊 SATELLITE
+# ===============================
+plot_box_and_stats(df_sat, "Satellite")
