@@ -115,9 +115,7 @@ if len(dfs) > 0:
     df_all = pd.concat(dfs, ignore_index=True)
 
     st.markdown("---")
-    st.header("📊 Combined Data (Filtered)")
 
-    st.dataframe(dfs,use_container_width=True)
 
     st.write("### 📈 Info")
     st.write("Total rows:", df_all.shape[0])
