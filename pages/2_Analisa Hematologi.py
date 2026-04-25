@@ -121,55 +121,105 @@ else:
     st.info("📭 Upload minimal satu file")
 
 # ===============================
-# 🧬 GROUPING
+# 🧬 GROUPING MAIN (Interim + Final)
 # ===============================
 st.markdown("---")
-st.header("🧬 Group Assignment")
+st.header("🧬 Group Assignment (Main Study)")
 
-group_names = st.text_input(
-    "Nama group (pisahkan koma)",
+group_names_main = st.text_input(
+    "Main Group (Interim + Final)",
     placeholder="Control, Dose1, Dose2"
 )
 
-replicate_n = st.number_input(
-    "Jumlah ulangan per group",
+replicate_main = st.number_input(
+    "Ulangan per group (Main)",
     min_value=1,
     value=6
 )
 
-if group_names:
+# pilih source (Interim prioritas)
+df_main_source = None
 
-    groups = [g.strip() for g in group_names.split(",") if g.strip()]
+if df_interim is not None:
+    df_main_source = df_interim.copy()
+elif df_final is not None:
+    df_main_source = df_final.copy()
 
-    # buat label urutan
+if group_names_main and df_main_source is not None:
+
+    groups = [g.strip() for g in group_names_main.split(",") if g.strip()]
+
     labels = []
     for g in groups:
-        labels += [g] * replicate_n
+        labels += [g] * replicate_main
 
-    # ambil sample berdasarkan urutan tampil
-    samples = df_all["Sample ID"].tolist()
+    samples = df_main_source["Sample ID"].tolist()
 
-    # ===============================
-    # VALIDASI
-    # ===============================
     if len(labels) != len(samples):
-        st.warning(
-            f"⚠️ Jumlah data ({len(samples)}) tidak cocok dengan total group ({len(labels)})"
-        )
+        st.warning("⚠️ Jumlah data tidak cocok dengan grouping (Main)")
     else:
-        # mapping
-        df_all["Group"] = labels
+        df_main_source["Group"] = labels
 
-        st.success("✅ Group berhasil di-assign")
+        st.success("✅ Main grouping berhasil")
 
-        # tampilkan mapping
-        st.subheader("📋 Sample → Group")
-        st.dataframe(
-            df_all[["Sample ID", "Group"]],
-            use_container_width=True,
-            height=400
+        # mapping ke semua data MAIN (Interim + Final saja)
+        group_map = dict(zip(df_main_source["Sample ID"], df_main_source["Group"]))
+
+        if df_interim is not None:
+            df_interim["Group"] = df_interim["Sample ID"].map(group_map)
+
+        if df_final is not None:
+            df_final["Group"] = df_final["Sample ID"].map(group_map)
+
+        # tampilkan
+        st.subheader("📋 Main Mapping")
+        st.dataframe(df_main_source[["Sample ID", "Group"]], height=400)
+
+        # combine main only
+        df_main = pd.concat(
+            [d for d in [df_interim, df_final] if d is not None],
+            ignore_index=True
         )
 
-        # tampilkan data final
-        st.subheader("📊 Data dengan Group")
-        st.dataframe(df_all, use_container_width=True, height=500)
+        st.subheader("📊 Main Data (with Group)")
+        st.dataframe(df_main, use_container_width=True, height=500)
+
+# ===============================
+# 🛰️ GROUPING SATELLITE (TERPISAH)
+# ===============================
+st.markdown("---")
+st.header("🛰️ Group Assignment (Satellite)")
+
+group_names_sat = st.text_input(
+    "Satellite Group",
+    placeholder="Control, Recovery"
+)
+
+replicate_sat = st.number_input(
+    "Ulangan per group (Satellite)",
+    min_value=1,
+    value=5
+)
+
+if df_sat is not None and group_names_sat:
+
+    groups = [g.strip() for g in group_names_sat.split(",") if g.strip()]
+
+    labels = []
+    for g in groups:
+        labels += [g] * replicate_sat
+
+    samples = df_sat["Sample ID"].tolist()
+
+    if len(labels) != len(samples):
+        st.warning("⚠️ Jumlah data tidak cocok dengan grouping (Satellite)")
+    else:
+        df_sat["Group"] = labels
+
+        st.success("✅ Satellite grouping berhasil")
+
+        st.subheader("📋 Satellite Mapping")
+        st.dataframe(df_sat[["Sample ID", "Group"]], height=400)
+
+        st.subheader("📊 Satellite Data (with Group)")
+        st.dataframe(df_sat, use_container_width=True, height=500)
