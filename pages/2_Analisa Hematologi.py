@@ -117,9 +117,5 @@ if len(dfs) > 0:
     st.markdown("---")
 
 
-    st.write("### 📈 Info")
-    st.write("Total rows:", df_all.shape[0])
-    st.write("Columns:", list(df_all.columns))
-
 else:
     st.info("📭 Upload minimal satu file")
