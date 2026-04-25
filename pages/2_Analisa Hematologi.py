@@ -89,7 +89,7 @@ def load_data(file, label):
         # OUTPUT (HANYA FILTERED)
         # ===============================
         st.markdown(f"### 🧬 Filtered Hematology ({label})")
-        st.dataframe(df_filtered.head())
+        st.dataframe(df_filtered, use_container_width=True)
 
         st.success(f"{label}: {df_filtered.shape[0]} rows loaded")
 
