@@ -100,14 +100,14 @@ def load_data(file, label):
         return None
 
 
-# ===============================
-# 🚀 LOAD ALL
-# ===============================
-df_interim = load_data(interim_file, "Interim") if interim_file else None
-df_final   = load_data(final_file, "Final") if final_file else None
-df_sat     = load_data(sat_file, "Satellite") if sat_file else None
-
- 
-
-else:
-    st.info("📭 Upload minimal satu file")
+    # ===============================
+    # 🚀 LOAD ALL
+    # ===============================
+    df_interim = load_data(interim_file, "Interim") if interim_file else None
+    df_final   = load_data(final_file, "Final") if final_file else None
+    df_sat     = load_data(sat_file, "Satellite") if sat_file else None
+    
+     
+    
+    else:
+        st.info("📭 Upload minimal satu file")
