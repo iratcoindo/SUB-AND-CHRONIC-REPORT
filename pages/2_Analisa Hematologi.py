@@ -24,6 +24,13 @@ st.subheader("🛰️ Satellite Data (Separate)")
 sat_file = st.file_uploader("Satellite Upload", type=["xlsx","csv"])
 
 # ===============================
+# 🚀 LOAD DATA
+# ===============================
+df_interim = load_data(interim_file, "Interim")
+df_final   = load_data(final_file, "Final")
+df_sat     = load_data(sat_file, "Satellite")
+
+# ===============================
 # FUNCTION LOAD (FIXED - HORIZONTAL FORMAT)
 # ===============================
 def load_data(file, label):
