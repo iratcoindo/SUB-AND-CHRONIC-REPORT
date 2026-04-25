@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
 
 st.set_page_config(layout="wide")
 st.title("📊 Hematology Analyzer (Raw Filter Mode)")
@@ -223,3 +225,96 @@ if df_sat is not None and group_names_sat:
 
         st.subheader("📊 Satellite Data (with Group)")
         st.dataframe(df_sat, use_container_width=True, height=500)
+
+# ===============================
+# 📊 VISUALISASI MAIN STUDY
+# ===============================
+if 'df_main' in locals():
+
+    st.markdown("---")
+    st.header("📊 Visualization (Main Study)")
+
+    param = st.selectbox(
+        "Pilih parameter",
+        TARGET_COLS
+    )
+
+    # ===============================
+    # MEAN ± SD
+    # ===============================
+    summary = df_main.groupby(["Source","Group"])[param].agg(["mean","std"]).reset_index()
+
+    st.subheader("📈 Mean ± SD")
+    st.dataframe(summary)
+
+    # ===============================
+    # PLOT INTERIM & FINAL TERPISAH
+    # ===============================
+    fig, ax = plt.subplots()
+
+    for source in df_main["Source"].unique():
+        data = summary[summary["Source"] == source]
+        ax.errorbar(
+            data["Group"],
+            data["mean"],
+            yerr=data["std"],
+            marker='o',
+            label=source
+        )
+
+    ax.set_title(f"{param} (Interim vs Final)")
+    ax.set_ylabel(param)
+    ax.legend()
+
+    st.pyplot(fig)
+
+    # ===============================
+    # ANOVA (OECD BASIC)
+    # ===============================
+    st.subheader("🔬 Statistik (ANOVA)")
+
+    groups_data = [
+        group[param].dropna().values
+        for name, group in df_main.groupby("Group")
+    ]
+
+    if len(groups_data) > 1:
+        f_val, p_val = stats.f_oneway(*groups_data)
+
+        st.write(f"F-value: {f_val:.3f}")
+        st.write(f"p-value: {p_val:.5f}")
+
+        if p_val < 0.05:
+            st.warning("⚠️ Ada perbedaan signifikan antar group")
+        else:
+            st.success("✅ Tidak ada perbedaan signifikan")
+
+# ===============================
+# 🛰️ FINAL vs SATELLITE
+# ===============================
+if df_sat is not None and df_final is not None and "Group" in df_sat.columns:
+
+    st.markdown("---")
+    st.header("🛰️ Satellite vs Final Comparison")
+
+    param2 = st.selectbox("Parameter (Satellite)", TARGET_COLS, key="sat_param")
+
+    fig3, ax3 = plt.subplots()
+
+    groups_sat = df_sat["Group"].unique()
+
+    for g in groups_sat:
+        sat_mean = df_sat[df_sat["Group"]==g][param2].mean()
+
+        # cari group sama di final
+        final_mean = df_final[df_final["Group"]==g][param2].mean()
+
+        ax3.bar(
+            [f"{g}-Final", f"{g}-Sat"],
+            [final_mean, sat_mean]
+        )
+
+    ax3.set_title(f"{param2} (Final vs Satellite)")
+    ax3.set_ylabel(param2)
+
+    st.pyplot(fig3)
