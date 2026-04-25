@@ -119,3 +119,57 @@ if len(dfs) > 0:
 
 else:
     st.info("📭 Upload minimal satu file")
+
+# ===============================
+# 🧬 GROUPING
+# ===============================
+st.markdown("---")
+st.header("🧬 Group Assignment")
+
+group_names = st.text_input(
+    "Nama group (pisahkan koma)",
+    placeholder="Control, Dose1, Dose2"
+)
+
+replicate_n = st.number_input(
+    "Jumlah ulangan per group",
+    min_value=1,
+    value=6
+)
+
+if group_names:
+
+    groups = [g.strip() for g in group_names.split(",") if g.strip()]
+
+    # buat label urutan
+    labels = []
+    for g in groups:
+        labels += [g] * replicate_n
+
+    # ambil sample berdasarkan urutan tampil
+    samples = df_all["Sample ID"].tolist()
+
+    # ===============================
+    # VALIDASI
+    # ===============================
+    if len(labels) != len(samples):
+        st.warning(
+            f"⚠️ Jumlah data ({len(samples)}) tidak cocok dengan total group ({len(labels)})"
+        )
+    else:
+        # mapping
+        df_all["Group"] = labels
+
+        st.success("✅ Group berhasil di-assign")
+
+        # tampilkan mapping
+        st.subheader("📋 Sample → Group")
+        st.dataframe(
+            df_all[["Sample ID", "Group"]],
+            use_container_width=True,
+            height=400
+        )
+
+        # tampilkan data final
+        st.subheader("📊 Data dengan Group")
+        st.dataframe(df_all, use_container_width=True, height=500)
