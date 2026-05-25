@@ -497,7 +497,7 @@ if uploaded_file is not None:
             
                     box.set(
                         facecolor=JCO_COLORS[i],
-                        alpha=0.35,
+                        alpha=0.55,
                         edgecolor="black",
                         linewidth=1.6
                     )
@@ -537,11 +537,11 @@ if uploaded_file is not None:
                     ax.scatter(
                         x,
                         vals,
-                        color=JCO_COLORS[i],
+                        color="gray",
                         edgecolors="black",
                         linewidths=0.7,
                         s=50,
-                        alpha=0.8,
+                        alpha=0.7,
                         zorder=5
                     )
             
