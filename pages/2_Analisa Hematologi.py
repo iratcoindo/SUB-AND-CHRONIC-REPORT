@@ -46,74 +46,125 @@ def load_data_df(df, label):
         # ===============================
         # DETECT SAMPLE ID
         # ===============================
-        possible_ids = ["Sample ID", "Sample", "ID", "Patient ID"]
+        possible_ids = [
+            "Sample ID",
+            "Sample",
+            "ID",
+            "Patient ID"
+        ]
 
         sample_col = None
 
         for c in possible_ids:
+
             if c in df.columns:
                 sample_col = c
                 break
 
         # fallback
         if sample_col is None:
+
             df["Sample ID"] = df.index.astype(str)
             sample_col = "Sample ID"
 
         # ===============================
         # MATCH TARGET COLS
         # ===============================
-        col_map = {c.strip(): c for c in df.columns}
+        col_map = {}
+
+        for c in df.columns:
+            col_map[c.strip()] = c
 
         selected_cols = []
 
         for t in TARGET_COLS:
+
             if t in col_map:
                 selected_cols.append(col_map[t])
 
+        # ===============================
+        # VALIDASI
+        # ===============================
         if len(selected_cols) == 0:
-            st.error(f"❌ Tidak ada kolom hematologi ditemukan di {label}")
+
+            st.error(
+                f"❌ Tidak ada kolom hematologi ditemukan di {label}"
+            )
+
             return None
 
         # ===============================
         # FILTER
         # ===============================
-        df_filtered = df[[sample_col] + selected_cols].copy()
-        
+        df_filtered = df[
+            [sample_col] + selected_cols
+        ].copy()
+
+        # rename sample id
         df_filtered = df_filtered.rename(
-            columns={sample_col: "Sample ID"}
+            columns={
+                sample_col: "Sample ID"
+            }
         )
-        
+
         # ===============================
-        # TAMBAH NO
+        # TAMBAH NOMOR
         # ===============================
         df_filtered.insert(
             0,
             "No",
             range(1, len(df_filtered) + 1)
         )
-        
+
         # ===============================
         # CONVERT NUMERIC
         # ===============================
         for c in selected_cols:
-        
+
             df_filtered[c] = pd.to_numeric(
                 df_filtered[c],
                 errors="coerce"
             )
-        
+
         # ===============================
         # URUTAN KOLOM
         # ===============================
-        ordered_cols = [
-            "No",
-            "Sample ID"
-        ] + selected_cols
-        
-        df_filtered = df_filtered[ordered_cols]
-        
+        ordered_cols = (
+            ["No", "Sample ID"] +
+            selected_cols
+        )
+
+        df_filtered = df_filtered[
+            ordered_cols
+        ]
+
         # ===============================
         # LABEL
         # ===============================
         df_filtered["Source"] = label
+
+        # ===============================
+        # OUTPUT
+        # ===============================
+        st.markdown(
+            f"### 🧬 Filtered Hematology ({label})"
+        )
+
+        st.dataframe(
+            df_filtered,
+            use_container_width=True
+        )
+
+        st.success(
+            f"{label}: {df_filtered.shape[0]} rows loaded"
+        )
+
+        return df_filtered
+
+    except Exception as e:
+
+        st.error(
+            f"❌ Error loading {label}: {e}"
+        )
+
+        return None
