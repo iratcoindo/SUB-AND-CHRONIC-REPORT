@@ -256,7 +256,7 @@ for chunk_idx, chunk_times in enumerate(time_chunks):
 
                 if (
                     day_num == 1 or
-                    day_num % 10 == 0
+                    day_num % 5 == 0
                 ):
 
                     xtick_pos.append(i)
@@ -269,7 +269,7 @@ for chunk_idx, chunk_times in enumerate(time_chunks):
 
                 if (
                     day_num == 1 or
-                    day_num % 15 == 0
+                    day_num % 5 == 0
                 ):
 
                     xtick_pos.append(i)
