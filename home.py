@@ -1,5 +1,5 @@
 import streamlit as st
-
+from pathlib import Path
 # ===============================
 # PAGE CONFIG
 # ===============================
@@ -74,42 +74,22 @@ if not st.session_state.authenticated:
     st.stop()
     
 # ===============================
-# SIDEBAR LOGO FIX
+# SIDEBAR LOGO
 # ===============================
-st.markdown("""
-<style>
+logo_path = Path(__file__).parent / "logo_iratco.png"
 
-/* sidebar top spacing */
-section[data-testid="stSidebar"] > div {
-    padding-top: 1rem;
-}
+with st.sidebar:
 
-/* logo container */
-.sidebar-logo {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-}
+    st.image(
+        str(logo_path),
+        width=180
+    )
 
-/* logo size */
-.sidebar-logo img {
-    width: 180px;
-}
+    st.markdown("---")
 
-</style>
-""", unsafe_allow_html=True)
-
-# render logo
-st.sidebar.markdown(
-    """
-    <div class="sidebar-logo">
-        <img src="app/static/logo_iratco.png">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.sidebar.markdown("---")
+    st.success(
+        f"Login as: {st.session_state.username}"
+    )
 
 # ===============================
 # MAIN APP (SETELAH LOGIN)
