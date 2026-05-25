@@ -405,48 +405,58 @@ for chunk_idx, chunk_times in enumerate(time_chunks):
     # =========================
     xtick_pos = []
     xtick_lab = []
-
+    
     for i, t in enumerate(chunk_times):
-
-        if t == "30m","1h","2h","4h","12h","16h","20h","24h":
-
+    
+        # =========================
+        # EARLY TIMEPOINT
+        # =========================
+        if t in [
+            "30m","1h","2h","4h",
+            "12h","16h","20h","24h"
+        ]:
+    
             xtick_pos.append(i)
-            xtick_lab.append("30m","1h","2h","4h","12h","16h","20h","24h")
-
+            xtick_lab.append(t)
+    
+        # =========================
+        # DAY TIMEPOINT
+        # =========================
         elif t.startswith("D"):
-
+    
             day_num = int(
                 t.replace("D","")
             )
-
+    
             # subchronic
             if study_type == "Subchronic":
-
+    
                 if (
                     day_num == 1 or
                     day_num % 10 == 0
                 ):
-
+    
                     xtick_pos.append(i)
                     xtick_lab.append(
                         str(day_num)
                     )
-
+    
             # chronic
             else:
-
+    
                 if (
                     day_num == 1 or
                     day_num % 15 == 0
                 ):
-
+    
                     xtick_pos.append(i)
                     xtick_lab.append(
                         str(day_num)
                     )
-
+    
+    # apply
     ax.set_xticks(xtick_pos)
-
+    
     ax.set_xticklabels(
         xtick_lab,
         rotation=45,
