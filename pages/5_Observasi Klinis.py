@@ -6,13 +6,37 @@ st.set_page_config(layout="wide")
 st.title("🧪 OECD Clinical Observation Input")
 
 # =========================
+# STUDY TYPE
+# =========================
+study_type = st.selectbox(
+    "Study Type",
+    ["Subchronic", "Chronic"]
+)
+
+# =========================
 # TIMEPOINT
 # =========================
-times = [
-    "30m","1h","2h","4h","12h","16h","20h","24h",
-    "D2","D3","D4","D5","D6","D7","D8","D9",
-    "D10","D11","D12","D13","D14","D15"
-]
+if study_type == "Subchronic":
+
+    times = [
+        "30m","1h","2h","4h","12h","16h","20h","24h"
+    ] + [f"D{i}" for i in range(2,119)]
+
+else:
+
+    times = [
+        "30m","1h","2h","4h","12h","16h","20h","24h"
+    ] + [f"D{i}" for i in range(2,299)]
+
+# =========================
+# SHOW
+# =========================
+st.write(f"Total Timepoints: {len(times)}")
+
+selected_time = st.selectbox(
+    "Select Timepoint",
+    times
+)
 
 # =========================
 # PARAMETER MASTER (FIX)
