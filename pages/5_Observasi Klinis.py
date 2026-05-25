@@ -172,7 +172,7 @@ xtick_lab = []
 for i, t in enumerate(times):
 
     # hour time tetap tampil
-    if t in ["30m","1h","2h","4h","12h","16h","20h","24h"]:
+    if t in ["24h"]:
 
         xtick_pos.append(i)
         xtick_lab.append(t)
@@ -267,7 +267,7 @@ xtick_lab = []
 for i, t in enumerate(times):
 
     # hour time tetap tampil
-    if t in ["30m","1h","2h","4h","12h","16h","20h","24h"]:
+    if t in ["24h"]:
 
         xtick_pos.append(i)
         xtick_lab.append(t)
