@@ -195,6 +195,124 @@ if uploaded_file is not None:
                 use_container_width=True,
                 height=700
             )
+        # ===============================
+        # GROUP ASSIGNMENT
+        # ===============================
+        st.markdown("---")
+        st.header("🧬 Group Assignment")
+        
+        # ===============================
+        # SEX INPUT
+        # ===============================
+        st.subheader("Sex Assignment")
+        
+        male_input = st.text_input(
+            "Nomor Jantan",
+            placeholder="1,2,3,4"
+        )
+        
+        female_input = st.text_input(
+            "Nomor Betina",
+            placeholder="5,6,7,8"
+        )
+        
+        # default sex
+        final_df["Sex"] = ""
+        
+        # assign male
+        if male_input:
+        
+            male_numbers = [
+                int(x.strip())
+                for x in male_input.split(",")
+                if x.strip().isdigit()
+            ]
+        
+            final_df.loc[
+                final_df["No"].isin(male_numbers),
+                "Sex"
+            ] = "Male"
+        
+        # assign female
+        if female_input:
+        
+            female_numbers = [
+                int(x.strip())
+                for x in female_input.split(",")
+                if x.strip().isdigit()
+            ]
+        
+            final_df.loc[
+                final_df["No"].isin(female_numbers),
+                "Sex"
+            ] = "Female"
+        
+        # ===============================
+        # GROUP INPUT
+        # ===============================
+        st.subheader("Group Assignment")
+        
+        n_groups = st.number_input(
+            "Jumlah Kelompok",
+            min_value=1,
+            value=2
+        )
+        
+        group_data = {}
+        
+        for i in range(n_groups):
+        
+            col1, col2 = st.columns(2)
+        
+            with col1:
+        
+                group_name = st.text_input(
+                    f"Nama Kelompok {i+1}",
+                    key=f"group_name_{i}"
+                )
+        
+            with col2:
+        
+                group_numbers = st.text_input(
+                    f"Nomor Kelompok {i+1}",
+                    placeholder="1,2,3",
+                    key=f"group_number_{i}"
+                )
+        
+            group_data[group_name] = group_numbers
+        
+        # ===============================
+        # ASSIGN GROUP
+        # ===============================
+        final_df["Group"] = ""
+        
+        for group_name, number_text in group_data.items():
+        
+            if group_name.strip() == "":
+                continue
+        
+            numbers = [
+                int(x.strip())
+                for x in number_text.split(",")
+                if x.strip().isdigit()
+            ]
+        
+            final_df.loc[
+                final_df["No"].isin(numbers),
+                "Group"
+            ] = group_name
+        
+        # ===============================
+        # OUTPUT TABLE
+        # ===============================
+        st.markdown("---")
+        st.subheader("📋 Assigned Hematology Table")
+        
+        st.dataframe(
+            final_df,
+            use_container_width=True,
+            height=800
+        )
 
         else:
 
