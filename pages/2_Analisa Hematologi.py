@@ -334,58 +334,64 @@ if uploaded_file is not None:
             )
 
             # ===============================
-            # STATISTICAL ANALYSIS
+            # VISUALIZATION
             # ===============================
             import numpy as np
+            import matplotlib.pyplot as plt
+            from scipy import stats
             
             st.markdown("---")
-            st.header("📊 Statistical Analysis")
+            st.header("📊 Statistical Visualization")
             
-            # pilih parameter
+            # ===============================
+            # PARAMETER SELECT
+            # ===============================
             param = st.selectbox(
-                "Parameter Statistik",
-                TARGET_COLS,
-                key="stat_param"
+                "Select Parameter",
+                TARGET_COLS
             )
             
             # ===============================
-            # FACET BY SEX
+            # FILTER DATA
             # ===============================
-            sexes = assigned_df["Sex"].dropna().unique()
+            plot_df = assigned_df.copy()
             
-            for sex in sexes:
+            plot_df = plot_df.dropna(
+                subset=[param, "Group", "Sex"]
+            )
             
-                df_sex = assigned_df[
-                    assigned_df["Sex"] == sex
-                ].copy()
+            # ===============================
+            # FACET SEX
+            # ===============================
+            sexes = ["Male", "Female"]
+            
+            fig, axes = plt.subplots(
+                1,
+                2,
+                figsize=(14,6),
+                sharey=True
+            )
+            
+            # ===============================
+            # LOOP SEX
+            # ===============================
+            for ax, sex in zip(axes, sexes):
+            
+                df_sex = plot_df[
+                    plot_df["Sex"] == sex
+                ]
             
                 if len(df_sex) == 0:
-                    continue
             
-                st.markdown(f"## {sex}")
-            
-                # ===============================
-                # GROUP CHECK
-                # ===============================
-                if "Group" not in df_sex.columns:
-            
-                    st.warning("Group belum diassign")
+                    ax.set_title(f"{sex} (No Data)")
                     continue
             
                 groups = sorted(
                     df_sex["Group"].dropna().unique()
                 )
             
-                if len(groups) < 2:
-            
-                    st.warning(
-                        f"{sex}: minimal 2 group diperlukan"
-                    )
-            
-                    continue
-            
                 # ===============================
-                # PREPARE DATA
+                # DATA GROUP
                 # ===============================
                 data_groups = []
             
@@ -395,121 +401,227 @@ if uploaded_file is not None:
                         df_sex["Group"] == g
                     ][param].dropna()
             
-                    if len(vals) > 0:
-                        data_groups.append(vals)
+                    data_groups.append(vals)
             
                 # ===============================
-                # NORMALITY TEST
+                # BOXPLOT
                 # ===============================
-                st.subheader("Normality Test")
+                bp = ax.boxplot(
+                    data_groups,
+                    patch_artist=True,
+                    widths=0.6,
+                    showfliers=False
+                )
             
-                normality_result = []
+                # prism-like
+                for box in bp["boxes"]:
             
-                all_normal = True
+                    box.set(
+                        facecolor="white",
+                        edgecolor="black",
+                        linewidth=1.5
+                    )
             
-                for g in groups:
+                for median in bp["medians"]:
             
-                    vals = df_sex[
-                        df_sex["Group"] == g
+                    median.set(
+                        color="black",
+                        linewidth=2
+                    )
+            
+                # ===============================
+                # JITTER
+                # ===============================
+                for i, vals in enumerate(data_groups):
+            
+                    x = np.random.normal(
+                        i + 1,
+                        0.06,
+                        size=len(vals)
+                    )
+            
+                    ax.scatter(
+                        x,
+                        vals,
+                        alpha=0.8,
+                        s=40,
+                        edgecolors="black"
+                    )
+            
+                # ===============================
+                # MAIN STATISTICS
+                # ===============================
+                p_main = None
+            
+                try:
+            
+                    # normality
+                    normal = True
+            
+                    for vals in data_groups:
+            
+                        if len(vals) >= 3:
+            
+                            _, p_norm = stats.shapiro(vals)
+            
+                            if p_norm < 0.05:
+                                normal = False
+            
+                    # variance
+                    _, p_lev = stats.levene(*data_groups)
+            
+                    equal_var = p_lev >= 0.05
+            
+                    # choose test
+                    if normal and equal_var:
+            
+                        if len(groups) == 2:
+            
+                            _, p_main = stats.ttest_ind(
+                                data_groups[0],
+                                data_groups[1]
+                            )
+            
+                            test_name = "T-test"
+            
+                        else:
+            
+                            _, p_main = stats.f_oneway(
+                                *data_groups
+                            )
+            
+                            test_name = "ANOVA"
+            
+                    else:
+            
+                        if len(groups) == 2:
+            
+                            _, p_main = stats.mannwhitneyu(
+                                data_groups[0],
+                                data_groups[1]
+                            )
+            
+                            test_name = "Mann-Whitney"
+            
+                        else:
+            
+                            _, p_main = stats.kruskal(
+                                *data_groups
+                            )
+            
+                            test_name = "Kruskal-Wallis"
+            
+                except:
+            
+                    p_main = None
+                    test_name = "N/A"
+            
+                # ===============================
+                # TITLE
+                # ===============================
+                if p_main is not None:
+            
+                    ax.set_title(
+                        f"{sex}\n{test_name} p={p_main:.4f}",
+                        fontsize=12
+                    )
+            
+                else:
+            
+                    ax.set_title(
+                        sex,
+                        fontsize=12
+                    )
+            
+                # ===============================
+                # AXIS
+                # ===============================
+                ax.set_xticks(
+                    range(1, len(groups)+1)
+                )
+            
+                ax.set_xticklabels(
+                    groups,
+                    rotation=45
+                )
+            
+                ax.set_ylabel(param)
+            
+                # ===============================
+                # POST HOC VS CONTROL
+                # ===============================
+                if len(groups) >= 2:
+            
+                    control = groups[0]
+            
+                    control_vals = df_sex[
+                        df_sex["Group"] == control
                     ][param].dropna()
             
-                    if len(vals) >= 3:
+                    ymax = df_sex[param].max()
             
-                        stat, p = stats.shapiro(vals)
+                    for idx, g in enumerate(groups[1:]):
             
-                        if p < 0.05:
-                            normal = "No"
-                            all_normal = False
-                        else:
-                            normal = "Yes"
+                        vals = df_sex[
+                            df_sex["Group"] == g
+                        ][param].dropna()
             
-                        normality_result.append({
-                            "Group": g,
-                            "Shapiro p-value": round(p,5),
-                            "Normal": normal
-                        })
+                        try:
             
-                normality_df = pd.DataFrame(
-                    normality_result
-                )
+                            # choose same type test
+                            if normal and equal_var:
             
-                st.dataframe(
-                    normality_df,
-                    use_container_width=True
-                )
+                                _, p_post = stats.ttest_ind(
+                                    control_vals,
+                                    vals
+                                )
             
-                # ===============================
-                # EQUAL VARIANCE
-                # ===============================
-                st.subheader("Equal Variance Test")
+                            else:
             
-                if len(data_groups) >= 2:
+                                _, p_post = stats.mannwhitneyu(
+                                    control_vals,
+                                    vals
+                                )
             
-                    lev_stat, lev_p = stats.levene(
-                        *data_groups
-                    )
+                            # significance symbol
+                            if p_post < 0.0001:
+                                sig = "****"
             
-                    equal_variance = lev_p >= 0.05
+                            elif p_post < 0.001:
+                                sig = "***"
             
-                    variance_df = pd.DataFrame({
-                        "Levene p-value":[round(lev_p,5)],
-                        "Equal Variance":[
-                            "Yes" if equal_variance else "No"
-                        ]
-                    })
+                            elif p_post < 0.01:
+                                sig = "**"
             
-                    st.dataframe(
-                        variance_df,
-                        use_container_width=True
-                    )
+                            elif p_post < 0.05:
+                                sig = "*"
             
-                else:
+                            else:
+                                sig = "ns"
             
-                    equal_variance = False
+                            # draw text
+                            ax.text(
+                                idx + 2,
+                                ymax * 1.05,
+                                sig,
+                                ha="center",
+                                fontsize=12
+                            )
             
-                # ===============================
-                # STATISTICAL DECISION
-                # ===============================
-                st.subheader("Recommended Statistical Test")
+                        except:
+                            pass
             
-                if all_normal and equal_variance:
+            # ===============================
+            # FINAL LAYOUT
+            # ===============================
+            fig.suptitle(
+                f"{param} by Sex",
+                fontsize=16
+            )
             
-                    if len(groups) == 2:
-                        recommended = "Independent T-Test"
-                    else:
-                        recommended = "One-Way ANOVA"
+            plt.tight_layout()
             
-                else:
-            
-                    if len(groups) == 2:
-                        recommended = "Mann-Whitney U Test"
-                    else:
-                        recommended = "Kruskal-Wallis Test"
-            
-                decision_df = pd.DataFrame({
-                    "Sex":[sex],
-                    "Parameter":[param],
-                    "Recommended Test":[recommended]
-                })
-            
-                st.dataframe(
-                    decision_df,
-                    use_container_width=True
-                )
-            
-                # ===============================
-                # DESCRIPTIVE STATISTICS
-                # ===============================
-                st.subheader("Descriptive Statistics")
-            
-                desc = df_sex.groupby("Group")[param].agg(
-                    ["mean","std","median","min","max","count"]
-                )
-            
-                st.dataframe(
-                    desc,
-                    use_container_width=True
-                )
+            st.pyplot(fig)
 
         
         else:
