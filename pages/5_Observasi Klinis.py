@@ -157,7 +157,7 @@ heat_data = df_heat[times].values
 # =========================
 # SPLIT PER 30 HARI
 # =========================
-early_times = ["24h"]
+early_times = ["30m","1h","2h","4h","12h","16h","20h","24h"]
 
 day_times = [
     t for t in times
@@ -408,10 +408,10 @@ for chunk_idx, chunk_times in enumerate(time_chunks):
 
     for i, t in enumerate(chunk_times):
 
-        if t == "24h":
+        if t == "30m","1h","2h","4h","12h","16h","20h","24h":
 
             xtick_pos.append(i)
-            xtick_lab.append("24h")
+            xtick_lab.append("30m","1h","2h","4h","12h","16h","20h","24h")
 
         elif t.startswith("D"):
 
