@@ -714,7 +714,7 @@ if uploaded_file is not None:
                 # ===============================
                 ax.set_ylabel(
                     param,
-                    fontsize=14,
+                    fontsize=16,
                     fontweight="bold"
                 )
             
@@ -786,7 +786,7 @@ if uploaded_file is not None:
                 control_min = np.min(control_vals)
                 control_max = np.max(control_vals)
             
-                lower_range = control_min * 0.90
+                lower_range = control_min * 0.9
                 upper_range = control_max * 1.10
             
                 # ===============================
