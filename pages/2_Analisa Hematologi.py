@@ -934,7 +934,7 @@ if uploaded_file is not None:
             # ===============================
             # SHOW POST HOC
             # ===============================
-            st.markdown("## 📋 Pairwise Wilcoxon Post Hoc")
+            st.markdown("## 📋 Post Hoc")
             
             posthoc_df = pd.DataFrame(
                 posthoc_results
