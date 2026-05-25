@@ -79,36 +79,49 @@ def load_data_df(df, label):
         # FILTER
         # ===============================
         df_filtered = df[[sample_col] + selected_cols].copy()
-
+        
         df_filtered = df_filtered.rename(
             columns={sample_col: "Sample ID"}
         )
-
-        # numeric convert
-        for c in selected_cols:
-            df_filtered[c] = pd.to_numeric(
-                df_filtered[c],
-                errors="coerce"
-            )
-
-        # label
-        df_filtered["Source"] = label
-
+        
         # ===============================
-        # OUTPUT
+        # TAMBAH NO
         # ===============================
-        st.markdown(f"### 🧬 Filtered Hematology ({label})")
-
-        st.dataframe(
-            df_filtered,
-            use_container_width=True
+        df_filtered.insert(
+            0,
+            "No",
+            range(1, len(df_filtered)+1)
         )
-
-        st.success(f"{label}: {df_filtered.shape[0]} rows loaded")
-
-        return df_filtered
-
-    except Exception as e:
-        st.error(f"❌ Error loading {label}: {e}")
-        return None
-
+        
+        # ===============================
+        # URUTAN KOLOM
+        # ===============================
+        ordered_cols = (
+            ["No", "Sample ID"] +
+            TARGET_COLS
+        )
+        
+        # ambil hanya kolom yang ada
+        ordered_cols = [
+            c for c in ordered_cols
+            if c in df_filtered.columns
+        ]
+        
+        df_filtered = df_filtered[ordered_cols]
+        
+        # ===============================
+        # CONVERT NUMERIC
+        # ===============================
+        for c in TARGET_COLS:
+        
+            if c in df_filtered.columns:
+        
+                df_filtered[c] = pd.to_numeric(
+                    df_filtered[c],
+                    errors="coerce"
+                )
+        
+        # ===============================
+        # LABEL
+        # ===============================
+        df_filtered["Source"] = label
