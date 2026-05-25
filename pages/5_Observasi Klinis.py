@@ -163,9 +163,49 @@ from matplotlib.colors import ListedColormap
 cmap = ListedColormap(["green", "red"])
 im.set_cmap(cmap)
 
-# label
-ax.set_xticks(np.arange(len(times)))
-ax.set_xticklabels(times, rotation=45)
+# =========================
+# CUSTOM X LABEL
+# =========================
+xtick_pos = []
+xtick_lab = []
+
+for i, t in enumerate(times):
+
+    # hour time tetap tampil
+    if t in ["30m","1h","2h","4h","12h","16h","20h","24h"]:
+
+        xtick_pos.append(i)
+        xtick_lab.append(t)
+
+    # day
+    elif t.startswith("D"):
+
+        day_num = int(t.replace("D",""))
+
+        # subchronic
+        if study_type == "Subchronic":
+
+            if day_num == 1 or day_num % 10 == 0:
+
+                xtick_pos.append(i)
+                xtick_lab.append(str(day_num))
+
+        # chronic
+        else:
+
+            if day_num == 1 or day_num % 15 == 0:
+
+                xtick_pos.append(i)
+                xtick_lab.append(str(day_num))
+
+# apply
+ax.set_xticks(xtick_pos)
+
+ax.set_xticklabels(
+    xtick_lab,
+    rotation=45,
+    fontsize=8
+)
 
 ax.set_yticks(np.arange(len(df_heat)))
 ax.set_yticklabels(df_heat["Kategori"] + " - " + df_heat["Parameter"])
@@ -221,8 +261,46 @@ for i in range(df_heat.shape[0]):
 # =========================
 # AXIS LABEL
 # =========================
-ax.set_xticks(np.arange(len(times)))
-ax.set_xticklabels(times, rotation=45)
+xtick_pos = []
+xtick_lab = []
+
+for i, t in enumerate(times):
+
+    # hour time tetap tampil
+    if t in ["30m","1h","2h","4h","12h","16h","20h","24h"]:
+
+        xtick_pos.append(i)
+        xtick_lab.append(t)
+
+    # day
+    elif t.startswith("D"):
+
+        day_num = int(t.replace("D",""))
+
+        # subchronic
+        if study_type == "Subchronic":
+
+            if day_num == 1 or day_num % 10 == 0:
+
+                xtick_pos.append(i)
+                xtick_lab.append(str(day_num))
+
+        # chronic
+        else:
+
+            if day_num == 1 or day_num % 15 == 0:
+
+                xtick_pos.append(i)
+                xtick_lab.append(str(day_num))
+
+# apply
+ax.set_xticks(xtick_pos)
+
+ax.set_xticklabels(
+    xtick_lab,
+    rotation=45,
+    fontsize=8
+)
 
 ax.set_yticks(np.arange(len(df_heat)))
 ax.set_yticklabels(df_heat["Kategori"] + " - " + df_heat["Parameter"])
