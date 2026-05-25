@@ -205,56 +205,82 @@ if uploaded_file is not None:
             assigned_df = final_df.copy()
             
             # ===============================
+            # FUNCTION PARSE NUMBER
+            # SUPPORT:
+            # 1,2,3
+            # 1-10
+            # 1-10,21-30
+            # ===============================
+            def parse_numbers(text):
+            
+                numbers = []
+            
+                if text.strip() == "":
+                    return numbers
+            
+                for item in text.split(","):
+            
+                    item = item.strip()
+            
+                    # RANGE
+                    if "-" in item:
+            
+                        try:
+            
+                            start, end = item.split("-")
+            
+                            start = int(start.strip())
+                            end = int(end.strip())
+            
+                            numbers.extend(
+                                range(start, end + 1)
+                            )
+            
+                        except:
+                            pass
+            
+                    # SINGLE NUMBER
+                    else:
+            
+                        if item.isdigit():
+            
+                            numbers.append(int(item))
+            
+                return numbers
+            
+            # ===============================
             # SEX ASSIGNMENT
             # ===============================
             st.subheader("Sex Assignment")
             
             male_text = st.text_input(
                 "Nomor Jantan",
-                placeholder="1,2,3"
+                placeholder="1-10, 21-30"
             )
             
             female_text = st.text_input(
                 "Nomor Betina",
-                placeholder="4,5,6"
+                placeholder="11-20, 31-40"
             )
             
             # default
             assigned_df["Sex"] = ""
             
             # male
-            if male_text != "":
+            male_numbers = parse_numbers(male_text)
             
-                male_numbers = []
-            
-                for x in male_text.split(","):
-            
-                    x = x.strip()
-            
-                    if x.isdigit():
-                        male_numbers.append(int(x))
-            
-                assigned_df.loc[
-                    assigned_df["No"].isin(male_numbers),
-                    "Sex"
-                ] = "Male"
+            assigned_df.loc[
+                assigned_df["No"].isin(male_numbers),
+                "Sex"
+            ] = "Male"
             
             # female
-            if female_text != "":
+            female_numbers = parse_numbers(female_text)
             
-                female_numbers = []
-            
-                for x in female_text.split(","):
-            
-                    x = x.strip()
-            
-                    if x.isdigit():
-                        female_numbers.append(int(x))
-            
-                assigned_df.loc[
-                    assigned_df["No"].isin(female_numbers),
-                    "Sex"
-                ] = "Female"
+            assigned_df.loc[
+                assigned_df["No"].isin(female_numbers),
+                "Sex"
+            ] = "Female"
             
             # ===============================
             # GROUP ASSIGNMENT
@@ -280,20 +306,15 @@ if uploaded_file is not None:
             
                 group_numbers = st.text_input(
                     f"Nomor Hewan {i+1}",
-                    placeholder="1,2,3",
+                    placeholder="1-10, 21-30",
                     key=f"group_numbers_{i}"
                 )
             
-                if group_name != "" and group_numbers != "":
+                # parse number
+                number_list = parse_numbers(group_numbers)
             
-                    number_list = []
-            
-                    for x in group_numbers.split(","):
-            
-                        x = x.strip()
-            
-                        if x.isdigit():
-                            number_list.append(int(x))
+                # assign
+                if group_name.strip() != "":
             
                     assigned_df.loc[
                         assigned_df["No"].isin(number_list),
@@ -311,7 +332,6 @@ if uploaded_file is not None:
                 use_container_width=True,
                 height=800
             )
-
         else:
 
             st.warning(
