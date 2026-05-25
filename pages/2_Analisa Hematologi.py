@@ -3,7 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 
+# ===============================
+# PAGE CONFIG
+# ===============================
 st.set_page_config(layout="wide")
+
 st.title("📊 Hematology Analyzer (Raw Filter Mode)")
 
 # ===============================
@@ -13,7 +17,7 @@ st.subheader("📥 Upload Excel File")
 
 uploaded_file = st.file_uploader(
     "Upload Excel",
-    type=["xlsx", "csv"]
+    type=["xlsx"]
 )
 
 # ===============================
@@ -27,16 +31,12 @@ TARGET_COLS = [
     "PLT","MPV","PDW","PCT"
 ]
 
-def load_data(file, label):
-    if file is None:
-        return None
+# ===============================
+# LOAD FUNCTION
+# ===============================
+def load_data_df(df, label):
 
     try:
-        # LOAD
-        if file.name.endswith(".xlsx"):
-            df = pd.read_excel(file, engine="openpyxl")
-        else:
-            df = pd.read_csv(file)
 
         # ===============================
         # CLEAN COLUMN NAME
@@ -49,22 +49,24 @@ def load_data(file, label):
         possible_ids = ["Sample ID", "Sample", "ID", "Patient ID"]
 
         sample_col = None
+
         for c in possible_ids:
             if c in df.columns:
                 sample_col = c
                 break
 
-        # fallback kalau tidak ada
+        # fallback
         if sample_col is None:
             df["Sample ID"] = df.index.astype(str)
             sample_col = "Sample ID"
 
         # ===============================
-        # MATCH KOLOM TARGET
+        # MATCH TARGET COLS
         # ===============================
         col_map = {c.strip(): c for c in df.columns}
 
         selected_cols = []
+
         for t in TARGET_COLS:
             if t in col_map:
                 selected_cols.append(col_map[t])
@@ -74,23 +76,33 @@ def load_data(file, label):
             return None
 
         # ===============================
-        # FILTER + SUSUN KOLOM
+        # FILTER
         # ===============================
         df_filtered = df[[sample_col] + selected_cols].copy()
-        df_filtered = df_filtered.rename(columns={sample_col: "Sample ID"})
 
-        # convert numeric
+        df_filtered = df_filtered.rename(
+            columns={sample_col: "Sample ID"}
+        )
+
+        # numeric convert
         for c in selected_cols:
-            df_filtered[c] = pd.to_numeric(df_filtered[c], errors="coerce")
+            df_filtered[c] = pd.to_numeric(
+                df_filtered[c],
+                errors="coerce"
+            )
 
-        # tambahkan label
+        # label
         df_filtered["Source"] = label
 
         # ===============================
-        # OUTPUT (HANYA FILTERED)
+        # OUTPUT
         # ===============================
         st.markdown(f"### 🧬 Filtered Hematology ({label})")
-        st.dataframe(df_filtered, use_container_width=True)
+
+        st.dataframe(
+            df_filtered,
+            use_container_width=True
+        )
 
         st.success(f"{label}: {df_filtered.shape[0]} rows loaded")
 
@@ -99,13 +111,53 @@ def load_data(file, label):
     except Exception as e:
         st.error(f"❌ Error loading {label}: {e}")
         return None
-    
+
 # ===============================
-# 🚀 LOAD ALL
+# 🚀 LOAD ALL SHEETS
 # ===============================
-df_interim = load_data(interim_file, "Interim") if interim_file else None
-df_final   = load_data(final_file, "Final") if final_file else None
-df_sat     = load_data(sat_file, "Satellite") if sat_file else None
+df_interim = None
+df_final = None
+df_sat = None
+
+if uploaded_file is not None:
+
+    try:
+
+        sheets = pd.read_excel(
+            uploaded_file,
+            sheet_name=None,
+            engine="openpyxl"
+        )
+
+        # ===============================
+        # INTERIM
+        # ===============================
+        if "Interim" in sheets:
+            df_interim = load_data_df(
+                sheets["Interim"],
+                "Interim"
+            )
+
+        # ===============================
+        # FINAL
+        # ===============================
+        if "Final" in sheets:
+            df_final = load_data_df(
+                sheets["Final"],
+                "Final"
+            )
+
+        # ===============================
+        # SATELLITE
+        # ===============================
+        if "Satellite" in sheets:
+            df_sat = load_data_df(
+                sheets["Satellite"],
+                "Satellite"
+            )
+
+    except Exception as e:
+        st.error(f"❌ Error membaca Excel: {e}")
 
 # ===============================
 # 🔗 COMBINE
@@ -113,18 +165,22 @@ df_sat     = load_data(sat_file, "Satellite") if sat_file else None
 dfs = [d for d in [df_interim, df_final, df_sat] if d is not None]
 
 if len(dfs) > 0:
-    df_all = pd.concat(dfs, ignore_index=True)
+
+    df_all = pd.concat(
+        dfs,
+        ignore_index=True
+    )
 
     st.markdown("---")
 
-
 else:
-    st.info("📭 Upload minimal satu file")
+    st.info("📭 Upload minimal satu sheet")
 
 # ===============================
-# 🧬 GROUPING MAIN (Interim + Final)
+# 🧬 GROUPING MAIN
 # ===============================
 st.markdown("---")
+
 st.header("🧬 Group Assignment (Main Study)")
 
 group_names_main = st.text_input(
@@ -138,33 +194,49 @@ replicate_main = st.number_input(
     value=6
 )
 
-# pilih source (Interim prioritas)
+# pilih source
 df_main_source = None
 
 if df_interim is not None:
     df_main_source = df_interim.copy()
+
 elif df_final is not None:
     df_main_source = df_final.copy()
 
 if group_names_main and df_main_source is not None:
 
-    groups = [g.strip() for g in group_names_main.split(",") if g.strip()]
+    groups = [
+        g.strip()
+        for g in group_names_main.split(",")
+        if g.strip()
+    ]
 
     labels = []
+
     for g in groups:
         labels += [g] * replicate_main
 
     samples = df_main_source["Sample ID"].tolist()
 
     if len(labels) != len(samples):
-        st.warning("⚠️ Jumlah data tidak cocok dengan grouping (Main)")
+
+        st.warning(
+            "⚠️ Jumlah data tidak cocok dengan grouping (Main)"
+        )
+
     else:
+
         df_main_source["Group"] = labels
 
         st.success("✅ Main grouping berhasil")
 
-        # mapping ke semua data MAIN (Interim + Final saja)
-        group_map = dict(zip(df_main_source["Sample ID"], df_main_source["Group"]))
+        # mapping
+        group_map = dict(
+            zip(
+                df_main_source["Sample ID"],
+                df_main_source["Group"]
+            )
+        )
 
         if df_interim is not None:
             df_interim["Group"] = df_interim["Sample ID"].map(group_map)
@@ -174,21 +246,34 @@ if group_names_main and df_main_source is not None:
 
         # tampilkan
         st.subheader("📋 Main Mapping")
-        st.dataframe(df_main_source[["Sample ID", "Group"]], height=400)
 
-        # combine main only
+        st.dataframe(
+            df_main_source[["Sample ID", "Group"]],
+            height=400
+        )
+
+        # combine main
         df_main = pd.concat(
-            [d for d in [df_interim, df_final] if d is not None],
+            [
+                d for d in [df_interim, df_final]
+                if d is not None
+            ],
             ignore_index=True
         )
 
         st.subheader("📊 Main Data (with Group)")
-        st.dataframe(df_main, use_container_width=True, height=500)
+
+        st.dataframe(
+            df_main,
+            use_container_width=True,
+            height=500
+        )
 
 # ===============================
-# 🛰️ GROUPING SATELLITE (TERPISAH)
+# 🛰️ GROUPING SATELLITE
 # ===============================
 st.markdown("---")
+
 st.header("🛰️ Group Assignment (Satellite)")
 
 group_names_sat = st.text_input(
@@ -204,34 +289,57 @@ replicate_sat = st.number_input(
 
 if df_sat is not None and group_names_sat:
 
-    groups = [g.strip() for g in group_names_sat.split(",") if g.strip()]
+    groups = [
+        g.strip()
+        for g in group_names_sat.split(",")
+        if g.strip()
+    ]
 
     labels = []
+
     for g in groups:
         labels += [g] * replicate_sat
 
     samples = df_sat["Sample ID"].tolist()
 
     if len(labels) != len(samples):
-        st.warning("⚠️ Jumlah data tidak cocok dengan grouping (Satellite)")
+
+        st.warning(
+            "⚠️ Jumlah data tidak cocok dengan grouping (Satellite)"
+        )
+
     else:
+
         df_sat["Group"] = labels
 
         st.success("✅ Satellite grouping berhasil")
 
         st.subheader("📋 Satellite Mapping")
-        st.dataframe(df_sat[["Sample ID", "Group"]], height=400)
+
+        st.dataframe(
+            df_sat[["Sample ID", "Group"]],
+            height=400
+        )
 
         st.subheader("📊 Satellite Data (with Group)")
-        st.dataframe(df_sat, use_container_width=True, height=500)
+
+        st.dataframe(
+            df_sat,
+            use_container_width=True,
+            height=500
+        )
 
 # ===============================
 # 📊 BOXPLOT + STATISTIK
 # ===============================
 st.markdown("---")
+
 st.header("📊 Boxplot & Statistik")
 
-param = st.selectbox("Pilih parameter", TARGET_COLS)
+param = st.selectbox(
+    "Pilih parameter",
+    TARGET_COLS
+)
 
 # ===============================
 # FUNCTION PLOT + STATS
@@ -249,10 +357,20 @@ def plot_box_and_stats(df, title):
     # ===============================
     fig, ax = plt.subplots()
 
-    groups = sorted(df["Group"].dropna().unique())
-    data = [df[df["Group"] == g][param].dropna() for g in groups]
+    groups = sorted(
+        df["Group"].dropna().unique()
+    )
 
-    ax.boxplot(data, labels=groups)
+    data = [
+        df[df["Group"] == g][param].dropna()
+        for g in groups
+    ]
+
+    ax.boxplot(
+        data,
+        labels=groups
+    )
+
     ax.set_title(f"{param} - {title}")
     ax.set_ylabel(param)
 
@@ -261,17 +379,23 @@ def plot_box_and_stats(df, title):
     # ===============================
     # MEAN ± SD
     # ===============================
-    summary = df.groupby("Group")[param].agg(["mean","std","count"])
+    summary = df.groupby("Group")[param].agg(
+        ["mean","std","count"]
+    )
+
     st.write("### Mean ± SD")
+
     st.dataframe(summary)
 
     # ===============================
     # ANOVA
     # ===============================
     if len(data) > 1:
+
         f_val, p_val = stats.f_oneway(*data)
 
         st.write("### ANOVA")
+
         st.write(f"F-value: {f_val:.3f}")
         st.write(f"p-value: {p_val:.5f}")
 
@@ -283,14 +407,23 @@ def plot_box_and_stats(df, title):
 # ===============================
 # 📊 INTERIM
 # ===============================
-plot_box_and_stats(df_interim, "Interim")
+plot_box_and_stats(
+    df_interim,
+    "Interim"
+)
 
 # ===============================
 # 📊 FINAL
 # ===============================
-plot_box_and_stats(df_final, "Final")
+plot_box_and_stats(
+    df_final,
+    "Final"
+)
 
 # ===============================
 # 📊 SATELLITE
 # ===============================
-plot_box_and_stats(df_sat, "Satellite")
+plot_box_and_stats(
+    df_sat,
+    "Satellite"
+)
