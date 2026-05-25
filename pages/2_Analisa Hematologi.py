@@ -943,19 +943,6 @@ if uploaded_file is not None:
                 use_container_width=True
             )
             
-            # ===============================
-            # SHOW LETTER DISPLAY
-            # ===============================
-            st.markdown("## 🔠 Compact Letter Display")
-            
-            letter_df = pd.DataFrame(
-                letter_results
-            )
-            
-            st.dataframe(
-                letter_df,
-                use_container_width=True
-            )
 # ============================================
         else:
 
