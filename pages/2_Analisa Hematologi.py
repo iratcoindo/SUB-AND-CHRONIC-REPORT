@@ -397,8 +397,10 @@ if uploaded_file is not None:
                     ax.set_title(f"{sex} (No Data)")
                     continue
             
-                groups = sorted(
-                    df_sex["Group"].dropna().unique()
+                groups = list(
+                    df_sex["Group"]
+                    .dropna()
+                    .drop_duplicates()
                 )
             
                 # ===============================
@@ -770,8 +772,10 @@ if uploaded_file is not None:
                 if len(df_sex) == 0:
                     continue
             
-                groups = sorted(
-                    df_sex["Group"].dropna().unique()
+                groups = list(
+                    df_sex["Group"]
+                    .dropna()
+                    .drop_duplicates()
                 )
             
                 # ===============================
