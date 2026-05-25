@@ -344,6 +344,19 @@ if uploaded_file is not None:
             st.header("📊 Statistical Visualization")
             
             # ===============================
+            # JCO COLOR PALETTE
+            # ===============================
+            JCO_COLORS = [
+                "#0073C2FF",  # blue
+                "#EFC000FF",  # yellow
+                "#868686FF",  # gray
+                "#CD534CFF",  # red
+                "#7AA6DCFF",  # light blue
+                "#003C67FF",  # navy
+                "#8F7700FF",  # olive
+            ]
+            
+            # ===============================
             # PARAMETER SELECT
             # ===============================
             param = st.selectbox(
@@ -352,7 +365,7 @@ if uploaded_file is not None:
             )
             
             # ===============================
-            # FILTER DATA
+            # PREPARE DATA
             # ===============================
             plot_df = assigned_df.copy()
             
@@ -409,53 +422,73 @@ if uploaded_file is not None:
                 bp = ax.boxplot(
                     data_groups,
                     patch_artist=True,
-                    widths=0.6,
+                    widths=0.55,
                     showfliers=False
                 )
             
-                # prism-like
-                for box in bp["boxes"]:
+                # ===============================
+                # STYLE BOX
+                # ===============================
+                for i, box in enumerate(bp["boxes"]):
             
                     box.set(
-                        facecolor="white",
+                        facecolor=JCO_COLORS[i % len(JCO_COLORS)],
                         edgecolor="black",
-                        linewidth=1.5
+                        linewidth=1.5,
+                        alpha=0.35
+                    )
+            
+                for whisker in bp["whiskers"]:
+            
+                    whisker.set(
+                        color="black",
+                        linewidth=1.2
+                    )
+            
+                for cap in bp["caps"]:
+            
+                    cap.set(
+                        color="black",
+                        linewidth=1.2
                     )
             
                 for median in bp["medians"]:
             
                     median.set(
                         color="black",
-                        linewidth=2
+                        linewidth=2.2
                     )
             
                 # ===============================
-                # JITTER
+                # JITTER POINT
                 # ===============================
                 for i, vals in enumerate(data_groups):
             
                     x = np.random.normal(
                         i + 1,
-                        0.06,
+                        0.045,
                         size=len(vals)
                     )
             
                     ax.scatter(
                         x,
                         vals,
+                        color=JCO_COLORS[i % len(JCO_COLORS)],
+                        edgecolors="black",
+                        linewidths=0.6,
                         alpha=0.8,
-                        s=40,
-                        edgecolors="black"
+                        s=42,
+                        zorder=5
                     )
             
                 # ===============================
-                # MAIN STATISTICS
+                # MAIN TEST
                 # ===============================
                 p_main = None
+                test_name = ""
             
                 try:
             
-                    # normality
                     normal = True
             
                     for vals in data_groups:
@@ -467,12 +500,13 @@ if uploaded_file is not None:
                             if p_norm < 0.05:
                                 normal = False
             
-                    # variance
                     _, p_lev = stats.levene(*data_groups)
             
                     equal_var = p_lev >= 0.05
             
-                    # choose test
+                    # ===============================
+                    # PARAMETRIC
+                    # ===============================
                     if normal and equal_var:
             
                         if len(groups) == 2:
@@ -492,6 +526,9 @@ if uploaded_file is not None:
             
                             test_name = "ANOVA"
             
+                    # ===============================
+                    # NON PARAMETRIC
+                    # ===============================
                     else:
             
                         if len(groups) == 2:
@@ -514,7 +551,6 @@ if uploaded_file is not None:
                 except:
             
                     p_main = None
-                    test_name = "N/A"
             
                 # ===============================
                 # TITLE
@@ -522,30 +558,18 @@ if uploaded_file is not None:
                 if p_main is not None:
             
                     ax.set_title(
-                        f"{sex}\n{test_name} p={p_main:.4f}",
-                        fontsize=12
+                        f"{sex}\n{test_name} p = {p_main:.4f}",
+                        fontsize=13,
+                        fontweight="bold"
                     )
             
                 else:
             
                     ax.set_title(
                         sex,
-                        fontsize=12
+                        fontsize=13,
+                        fontweight="bold"
                     )
-            
-                # ===============================
-                # AXIS
-                # ===============================
-                ax.set_xticks(
-                    range(1, len(groups)+1)
-                )
-            
-                ax.set_xticklabels(
-                    groups,
-                    rotation=45
-                )
-            
-                ax.set_ylabel(param)
             
                 # ===============================
                 # POST HOC VS CONTROL
@@ -559,6 +583,11 @@ if uploaded_file is not None:
                     ][param].dropna()
             
                     ymax = df_sex[param].max()
+                    ymin = df_sex[param].min()
+            
+                    yrange = ymax - ymin
+            
+                    line_y = ymax + (yrange * 0.10)
             
                     for idx, g in enumerate(groups[1:]):
             
@@ -568,7 +597,6 @@ if uploaded_file is not None:
             
                         try:
             
-                            # choose same type test
                             if normal and equal_var:
             
                                 _, p_post = stats.ttest_ind(
@@ -583,7 +611,7 @@ if uploaded_file is not None:
                                     vals
                                 )
             
-                            # significance symbol
+                            # significance
                             if p_post < 0.0001:
                                 sig = "****"
             
@@ -599,24 +627,68 @@ if uploaded_file is not None:
                             else:
                                 sig = "ns"
             
-                            # draw text
+                            x1 = 1
+                            x2 = idx + 2
+            
+                            y = line_y + (idx * yrange * 0.07)
+            
+                            # line
+                            ax.plot(
+                                [x1, x1, x2, x2],
+                                [y, y+(yrange*0.02),
+                                 y+(yrange*0.02), y],
+                                lw=1.3,
+                                c="black"
+                            )
+            
+                            # text
                             ax.text(
-                                idx + 2,
-                                ymax * 1.05,
+                                (x1+x2)/2,
+                                y+(yrange*0.03),
                                 sig,
                                 ha="center",
-                                fontsize=12
+                                va="bottom",
+                                fontsize=12,
+                                fontweight="bold"
                             )
             
                         except:
                             pass
             
+                # ===============================
+                # AXIS STYLE
+                # ===============================
+                ax.set_xticks(
+                    range(1, len(groups)+1)
+                )
+            
+                ax.set_xticklabels(
+                    groups,
+                    rotation=45,
+                    fontsize=10
+                )
+            
+                ax.set_ylabel(
+                    param,
+                    fontsize=11,
+                    fontweight="bold"
+                )
+            
+                # clean theme
+                ax.spines["top"].set_visible(False)
+                ax.spines["right"].set_visible(False)
+            
+                ax.grid(
+                    False
+                )
+            
             # ===============================
-            # FINAL LAYOUT
+            # FINAL TITLE
             # ===============================
             fig.suptitle(
                 f"{param} by Sex",
-                fontsize=16
+                fontsize=17,
+                fontweight="bold"
             )
             
             plt.tight_layout()
