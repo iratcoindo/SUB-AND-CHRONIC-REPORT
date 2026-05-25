@@ -578,8 +578,7 @@ if uploaded_file is not None:
                     upper_range,
                     f"Upper range\n{upper_range:.2f}",
                     color="red",
-                    fontsize=10,
-                    fontweight="bold"
+                    fontsize=10
                 )
             
                 ax.text(
@@ -587,8 +586,7 @@ if uploaded_file is not None:
                     lower_range,
                     f"Lower range\n{lower_range:.2f}",
                     color="red",
-                    fontsize=10,
-                    fontweight="bold"
+                    fontsize=10
                 )
             
                 # ===============================
@@ -697,7 +695,7 @@ if uploaded_file is not None:
             
                 ax.set_xticklabels(
                     xtick_labels,
-                    fontsize=11
+                    fontsize=14
                 )
             
                 # ===============================
@@ -714,7 +712,7 @@ if uploaded_file is not None:
                 # ===============================
                 ax.set_ylabel(
                     param,
-                    fontsize=16,
+                    fontsize=14,
                     fontweight="bold"
                 )
             
