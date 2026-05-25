@@ -741,7 +741,222 @@ if uploaded_file is not None:
             
             st.pyplot(fig)
 
-        
+# ============================================
+            # ===============================
+            # POST HOC TABLE
+            # ===============================
+            st.markdown("---")
+            st.subheader("📋 Post Hoc Comparison")
+            
+            posthoc_results = []
+            
+            # ===============================
+            # DESCRIPTIVE TABLE
+            # ===============================
+            desc_results = []
+            
+            # ===============================
+            # COMPACT LETTER DISPLAY
+            # ===============================
+            letter_results = []
+            
+            # ===============================
+            # LOOP SEX
+            # ===============================
+            for sex in sexes:
+            
+                df_sex = plot_df[
+                    plot_df["Sex"] == sex
+                ].copy()
+            
+                if len(df_sex) == 0:
+                    continue
+            
+                groups = sorted(
+                    df_sex["Group"].dropna().unique()
+                )
+            
+                # ===============================
+                # CONTROL RANGE
+                # ===============================
+                control_vals = df_sex[
+                    df_sex["Group"] == groups[0]
+                ][param].dropna()
+            
+                control_min = np.min(control_vals)
+                control_max = np.max(control_vals)
+            
+                lower_range = control_min * 0.90
+                upper_range = control_max * 1.10
+            
+                # ===============================
+                # DESCRIPTIVE
+                # ===============================
+                for g in groups:
+            
+                    vals = df_sex[
+                        df_sex["Group"] == g
+                    ][param].dropna()
+            
+                    mean_val = np.mean(vals)
+                    sd_val = np.std(vals, ddof=1)
+            
+                    # out of range
+                    or_count = np.sum(
+                        (vals < lower_range) |
+                        (vals > upper_range)
+                    )
+            
+                    desc_results.append({
+                        "Sex": sex,
+                        "Group": g,
+                        "Mean ± SD":
+                            f"{mean_val:.2f} ± {sd_val:.2f}",
+                        "N": len(vals),
+                        "OR": int(or_count)
+                    })
+            
+                # ===============================
+                # PAIRWISE WILCOXON
+                # ===============================
+                group_letters = {}
+            
+                alphabet = list("abcdefghijklmnopqrstuvwxyz")
+            
+                for i, g1 in enumerate(groups):
+            
+                    vals1 = df_sex[
+                        df_sex["Group"] == g1
+                    ][param].dropna()
+            
+                    current_letter = alphabet[i]
+            
+                    group_letters[g1] = current_letter
+            
+                    for j, g2 in enumerate(groups):
+            
+                        if j <= i:
+                            continue
+            
+                        vals2 = df_sex[
+                            df_sex["Group"] == g2
+                        ][param].dropna()
+            
+                        try:
+            
+                            # ===============================
+                            # WILCOXON / MANN WHITNEY
+                            # ===============================
+                            _, pval = stats.mannwhitneyu(
+                                vals1,
+                                vals2,
+                                alternative="two-sided"
+                            )
+            
+                            # ===============================
+                            # SIGNIFICANCE
+                            # ===============================
+                            if pval < 0.0001:
+                                sig = "****"
+            
+                            elif pval < 0.001:
+                                sig = "***"
+            
+                            elif pval < 0.01:
+                                sig = "**"
+            
+                            elif pval < 0.05:
+                                sig = "*"
+            
+                            else:
+                                sig = "ns"
+            
+                            # ===============================
+                            # LETTER GROUPING
+                            # ===============================
+                            if pval >= 0.05:
+            
+                                group_letters[g2] = current_letter
+            
+                            else:
+            
+                                if g2 not in group_letters:
+                                    group_letters[g2] = alphabet[j]
+            
+                            # ===============================
+                            # SAVE RESULT
+                            # ===============================
+                            posthoc_results.append({
+                                "Sex": sex,
+                                "Parameter": param,
+                                "Comparison": f"{g1} vs {g2}",
+                                "P-value": round(pval,5),
+                                "Significance": sig
+                            })
+            
+                        except:
+                            pass
+            
+                # ===============================
+                # LETTER TABLE
+                # ===============================
+                for g in groups:
+            
+                    vals = df_sex[
+                        df_sex["Group"] == g
+                    ][param].dropna()
+            
+                    mean_val = np.mean(vals)
+            
+                    letter_results.append({
+                        "Sex": sex,
+                        "Group": g,
+                        "Mean": round(mean_val,2),
+                        "Letter": group_letters[g]
+                    })
+            
+            # ===============================
+            # SHOW DESCRIPTIVE
+            # ===============================
+            st.markdown("## 📊 Descriptive Statistics")
+            
+            desc_df = pd.DataFrame(
+                desc_results
+            )
+            
+            st.dataframe(
+                desc_df,
+                use_container_width=True
+            )
+            
+            # ===============================
+            # SHOW POST HOC
+            # ===============================
+            st.markdown("## 📋 Pairwise Wilcoxon Post Hoc")
+            
+            posthoc_df = pd.DataFrame(
+                posthoc_results
+            )
+            
+            st.dataframe(
+                posthoc_df,
+                use_container_width=True
+            )
+            
+            # ===============================
+            # SHOW LETTER DISPLAY
+            # ===============================
+            st.markdown("## 🔠 Compact Letter Display")
+            
+            letter_df = pd.DataFrame(
+                letter_results
+            )
+            
+            st.dataframe(
+                letter_df,
+                use_container_width=True
+            )
+# ============================================
         else:
 
             st.warning(
