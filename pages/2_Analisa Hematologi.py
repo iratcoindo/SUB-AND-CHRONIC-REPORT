@@ -255,12 +255,12 @@ if uploaded_file is not None:
             
             male_text = st.text_input(
                 "Nomor Jantan",
-                placeholder="1-10, 21-30"
+                value="1-10, 21-30, 41-50, 61-70"
             )
             
             female_text = st.text_input(
                 "Nomor Betina",
-                placeholder="11-20, 31-40"
+                value="11-20, 31-40, 51-60, 71-80"
             )
             
             # default
