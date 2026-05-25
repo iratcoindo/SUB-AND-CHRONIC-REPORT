@@ -344,20 +344,19 @@ if uploaded_file is not None:
             st.header("📊 Statistical Visualization")
             
             # ===============================
-            # JCO COLOR PALETTE
+            # JCO COLOR
             # ===============================
             JCO_COLORS = [
-                "#0073C2FF",  # blue
-                "#EFC000FF",  # yellow
-                "#868686FF",  # gray
-                "#CD534CFF",  # red
-                "#7AA6DCFF",  # light blue
-                "#003C67FF",  # navy
-                "#8F7700FF",  # olive
+                "#0073C2FF",
+                "#EFC000FF",
+                "#868686FF",
+                "#CD534CFF",
+                "#7AA6DCFF",
+                "#003C67FF"
             ]
             
             # ===============================
-            # PARAMETER SELECT
+            # PARAMETER
             # ===============================
             param = st.selectbox(
                 "Select Parameter",
@@ -365,7 +364,7 @@ if uploaded_file is not None:
             )
             
             # ===============================
-            # PREPARE DATA
+            # DATA
             # ===============================
             plot_df = assigned_df.copy()
             
@@ -374,16 +373,15 @@ if uploaded_file is not None:
             )
             
             # ===============================
-            # FACET SEX
+            # FIGURE
             # ===============================
-            sexes = ["Male", "Female"]
-            
             fig, axes = plt.subplots(
                 1,
                 2,
-                figsize=(14,6),
-                sharey=True
+                figsize=(16,7)
             )
+            
+            sexes = ["Male", "Female"]
             
             # ===============================
             # LOOP SEX
@@ -392,7 +390,7 @@ if uploaded_file is not None:
             
                 df_sex = plot_df[
                     plot_df["Sex"] == sex
-                ]
+                ].copy()
             
                 if len(df_sex) == 0:
             
@@ -417,74 +415,9 @@ if uploaded_file is not None:
                     data_groups.append(vals)
             
                 # ===============================
-                # BOXPLOT
-                # ===============================
-                bp = ax.boxplot(
-                    data_groups,
-                    patch_artist=True,
-                    widths=0.55,
-                    showfliers=False
-                )
-            
-                # ===============================
-                # STYLE BOX
-                # ===============================
-                for i, box in enumerate(bp["boxes"]):
-            
-                    box.set(
-                        facecolor=JCO_COLORS[i % len(JCO_COLORS)],
-                        edgecolor="black",
-                        linewidth=1.5,
-                        alpha=0.35
-                    )
-            
-                for whisker in bp["whiskers"]:
-            
-                    whisker.set(
-                        color="black",
-                        linewidth=1.2
-                    )
-            
-                for cap in bp["caps"]:
-            
-                    cap.set(
-                        color="black",
-                        linewidth=1.2
-                    )
-            
-                for median in bp["medians"]:
-            
-                    median.set(
-                        color="black",
-                        linewidth=2.2
-                    )
-            
-                # ===============================
-                # JITTER POINT
-                # ===============================
-                for i, vals in enumerate(data_groups):
-            
-                    x = np.random.normal(
-                        i + 1,
-                        0.045,
-                        size=len(vals)
-                    )
-            
-                    ax.scatter(
-                        x,
-                        vals,
-                        color=JCO_COLORS[i % len(JCO_COLORS)],
-                        edgecolors="black",
-                        linewidths=0.6,
-                        alpha=0.8,
-                        s=42,
-                        zorder=5
-                    )
-            
-                # ===============================
                 # MAIN TEST
                 # ===============================
-                p_main = None
+                p_main = np.nan
                 test_name = ""
             
                 try:
@@ -504,9 +437,7 @@ if uploaded_file is not None:
             
                     equal_var = p_lev >= 0.05
             
-                    # ===============================
-                    # PARAMETRIC
-                    # ===============================
+                    # parametric
                     if normal and equal_var:
             
                         if len(groups) == 2:
@@ -526,9 +457,7 @@ if uploaded_file is not None:
             
                             test_name = "ANOVA"
             
-                    # ===============================
-                    # NON PARAMETRIC
-                    # ===============================
+                    # non parametric
                     else:
             
                         if len(groups) == 2:
@@ -549,145 +478,262 @@ if uploaded_file is not None:
                             test_name = "Kruskal-Wallis"
             
                 except:
-            
-                    p_main = None
+                    pass
             
                 # ===============================
-                # TITLE
+                # BOXPLOT
                 # ===============================
-                if p_main is not None:
+                bp = ax.boxplot(
+                    data_groups,
+                    patch_artist=True,
+                    widths=0.55,
+                    showfliers=False
+                )
             
-                    ax.set_title(
-                        f"{sex}\n{test_name} p = {p_main:.4f}",
-                        fontsize=13,
-                        fontweight="bold"
+                # ===============================
+                # STYLE BOX
+                # ===============================
+                for i, box in enumerate(bp["boxes"]):
+            
+                    box.set(
+                        facecolor=JCO_COLORS[i],
+                        alpha=0.35,
+                        edgecolor="black",
+                        linewidth=1.6
                     )
             
-                else:
+                for median in bp["medians"]:
             
-                    ax.set_title(
-                        sex,
-                        fontsize=13,
-                        fontweight="bold"
+                    median.set(
+                        color="black",
+                        linewidth=2.3
+                    )
+            
+                for whisker in bp["whiskers"]:
+            
+                    whisker.set(
+                        color="black",
+                        linewidth=1.2
+                    )
+            
+                for cap in bp["caps"]:
+            
+                    cap.set(
+                        color="black",
+                        linewidth=1.2
                     )
             
                 # ===============================
-                # POST HOC VS CONTROL
+                # JITTER
                 # ===============================
-                if len(groups) >= 2:
+                for i, vals in enumerate(data_groups):
             
-                    control = groups[0]
+                    x = np.random.normal(
+                        i + 1,
+                        0.045,
+                        size=len(vals)
+                    )
             
-                    control_vals = df_sex[
-                        df_sex["Group"] == control
+                    ax.scatter(
+                        x,
+                        vals,
+                        color=JCO_COLORS[i],
+                        edgecolors="black",
+                        linewidths=0.7,
+                        s=50,
+                        alpha=0.8,
+                        zorder=5
+                    )
+            
+                # ===============================
+                # CONTROL RANGE
+                # ===============================
+                control_vals = data_groups[0]
+            
+                control_min = np.min(control_vals)
+                control_max = np.max(control_vals)
+            
+                lower_range = control_min * 0.90
+                upper_range = control_max * 1.10
+            
+                # lower line
+                ax.axhline(
+                    lower_range,
+                    color="red",
+                    linestyle="--",
+                    linewidth=1.5
+                )
+            
+                # upper line
+                ax.axhline(
+                    upper_range,
+                    color="red",
+                    linestyle="--",
+                    linewidth=1.5
+                )
+            
+                # text range
+                ax.text(
+                    0.55,
+                    upper_range,
+                    f"Upper range\n{upper_range:.2f}",
+                    color="red",
+                    fontsize=10,
+                    fontweight="bold"
+                )
+            
+                ax.text(
+                    0.55,
+                    lower_range,
+                    f"Lower range\n{lower_range:.2f}",
+                    color="red",
+                    fontsize=10,
+                    fontweight="bold"
+                )
+            
+                # ===============================
+                # POST HOC
+                # ===============================
+                ymax = df_sex[param].max()
+                ymin = df_sex[param].min()
+            
+                yrange = ymax - ymin
+            
+                start_y = ymax + (yrange * 0.20)
+            
+                for idx, g in enumerate(groups[1:]):
+            
+                    vals = df_sex[
+                        df_sex["Group"] == g
                     ][param].dropna()
             
-                    ymax = df_sex[param].max()
-                    ymin = df_sex[param].min()
+                    try:
             
-                    yrange = ymax - ymin
+                        if normal and equal_var:
             
-                    line_y = ymax + (yrange * 0.10)
-            
-                    for idx, g in enumerate(groups[1:]):
-            
-                        vals = df_sex[
-                            df_sex["Group"] == g
-                        ][param].dropna()
-            
-                        try:
-            
-                            if normal and equal_var:
-            
-                                _, p_post = stats.ttest_ind(
-                                    control_vals,
-                                    vals
-                                )
-            
-                            else:
-            
-                                _, p_post = stats.mannwhitneyu(
-                                    control_vals,
-                                    vals
-                                )
-            
-                            # significance
-                            if p_post < 0.0001:
-                                sig = "****"
-            
-                            elif p_post < 0.001:
-                                sig = "***"
-            
-                            elif p_post < 0.01:
-                                sig = "**"
-            
-                            elif p_post < 0.05:
-                                sig = "*"
-            
-                            else:
-                                sig = "ns"
-            
-                            x1 = 1
-                            x2 = idx + 2
-            
-                            y = line_y + (idx * yrange * 0.07)
-            
-                            # line
-                            ax.plot(
-                                [x1, x1, x2, x2],
-                                [y, y+(yrange*0.02),
-                                 y+(yrange*0.02), y],
-                                lw=1.3,
-                                c="black"
+                            _, p_post = stats.ttest_ind(
+                                control_vals,
+                                vals
                             )
             
-                            # text
-                            ax.text(
-                                (x1+x2)/2,
-                                y+(yrange*0.03),
-                                sig,
-                                ha="center",
-                                va="bottom",
-                                fontsize=12,
-                                fontweight="bold"
+                        else:
+            
+                            _, p_post = stats.mannwhitneyu(
+                                control_vals,
+                                vals
                             )
             
-                        except:
-                            pass
+                        # significance
+                        if p_post < 0.0001:
+                            sig = "****"
+            
+                        elif p_post < 0.001:
+                            sig = "***"
+            
+                        elif p_post < 0.01:
+                            sig = "**"
+            
+                        elif p_post < 0.05:
+                            sig = "*"
+            
+                        else:
+                            sig = "ns"
+            
+                        x1 = 1
+                        x2 = idx + 2
+            
+                        y = start_y + (idx * yrange * 0.09)
+            
+                        # line
+                        ax.plot(
+                            [x1, x1, x2, x2],
+                            [y, y+(yrange*0.02),
+                             y+(yrange*0.02), y],
+                            lw=1.4,
+                            c="black"
+                        )
+            
+                        # text
+                        ax.text(
+                            (x1+x2)/2,
+                            y+(yrange*0.03),
+                            sig,
+                            ha="center",
+                            fontsize=13,
+                            fontweight="bold"
+                        )
+            
+                    except:
+                        pass
             
                 # ===============================
-                # AXIS STYLE
+                # OUT OF RANGE
                 # ===============================
+                or_counts = []
+            
+                for vals in data_groups:
+            
+                    out_count = np.sum(
+                        (vals < lower_range) |
+                        (vals > upper_range)
+                    )
+            
+                    or_counts.append(out_count)
+            
+                # ===============================
+                # LABEL OR
+                # ===============================
+                xtick_labels = []
+            
+                for g, orv in zip(groups, or_counts):
+            
+                    label = f"{g}\n\nOR = {orv}"
+            
+                    xtick_labels.append(label)
+            
                 ax.set_xticks(
                     range(1, len(groups)+1)
                 )
             
                 ax.set_xticklabels(
-                    groups,
-                    rotation=45,
-                    fontsize=10
+                    xtick_labels,
+                    fontsize=11
                 )
             
-                ax.set_ylabel(
-                    param,
-                    fontsize=11,
+                # ===============================
+                # TITLE
+                # ===============================
+                ax.set_title(
+                    f"{sex}\n{test_name} p = {p_main:.4f}",
+                    fontsize=17,
                     fontweight="bold"
                 )
             
-                # clean theme
+                # ===============================
+                # AXIS
+                # ===============================
+                ax.set_ylabel(
+                    param,
+                    fontsize=14,
+                    fontweight="bold"
+                )
+            
+                # independent y scale
+                ax.set_ylim(
+                    ymin - (yrange*0.25),
+                    ymax + (yrange*0.45)
+                )
+            
+                # remove top/right
                 ax.spines["top"].set_visible(False)
                 ax.spines["right"].set_visible(False)
             
-                ax.grid(
-                    False
-                )
-            
             # ===============================
-            # FINAL TITLE
+            # GLOBAL TITLE
             # ===============================
             fig.suptitle(
                 f"{param} by Sex",
-                fontsize=17,
+                fontsize=24,
                 fontweight="bold"
             )
             
