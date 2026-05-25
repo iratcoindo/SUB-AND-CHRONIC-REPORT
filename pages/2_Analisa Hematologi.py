@@ -90,36 +90,28 @@ def load_data_df(df, label):
         df_filtered.insert(
             0,
             "No",
-            range(1, len(df_filtered)+1)
+            range(1, len(df_filtered) + 1)
         )
-        
-        # ===============================
-        # URUTAN KOLOM
-        # ===============================
-        ordered_cols = (
-            ["No", "Sample ID"] +
-            TARGET_COLS
-        )
-        
-        # ambil hanya kolom yang ada
-        ordered_cols = [
-            c for c in ordered_cols
-            if c in df_filtered.columns
-        ]
-        
-        df_filtered = df_filtered[ordered_cols]
         
         # ===============================
         # CONVERT NUMERIC
         # ===============================
-        for c in TARGET_COLS:
+        for c in selected_cols:
         
-            if c in df_filtered.columns:
+            df_filtered[c] = pd.to_numeric(
+                df_filtered[c],
+                errors="coerce"
+            )
         
-                df_filtered[c] = pd.to_numeric(
-                    df_filtered[c],
-                    errors="coerce"
-                )
+        # ===============================
+        # URUTAN KOLOM
+        # ===============================
+        ordered_cols = [
+            "No",
+            "Sample ID"
+        ] + selected_cols
+        
+        df_filtered = df_filtered[ordered_cols]
         
         # ===============================
         # LABEL
