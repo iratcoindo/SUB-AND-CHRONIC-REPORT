@@ -154,167 +154,344 @@ heat_data = df_heat[times].values
 heat_data = df_heat[times].values
 
 # plot
-fig, ax = plt.subplots(figsize=(12,6), dpi=150)
+# =========================
+# SPLIT PER 30 HARI
+# =========================
+early_times = ["24h"]
 
-im = ax.imshow(heat_data, aspect='auto')
+day_times = [
+    t for t in times
+    if t.startswith("D")
+]
 
-# custom colormap (hijau → merah)
-from matplotlib.colors import ListedColormap
-cmap = ListedColormap(["green", "red"])
-im.set_cmap(cmap)
+time_chunks = []
+
+# early chunk
+if len(early_times) > 0:
+    time_chunks.append(early_times)
+
+# 30 hari per chunk
+for start in range(0, len(day_times), 30):
+
+    chunk = day_times[start:start+30]
+
+    time_chunks.append(chunk)
 
 # =========================
-# CUSTOM X LABEL
+# LOOP HEATMAP
 # =========================
-xtick_pos = []
-xtick_lab = []
+for chunk_idx, chunk_times in enumerate(time_chunks):
 
-for i, t in enumerate(times):
+    # =========================
+    # TITLE
+    # =========================
+    if chunk_idx == 0:
 
-    # hour time tetap tampil
-    if t in ["24h"]:
+        title_text = "24h Observation"
 
-        xtick_pos.append(i)
-        xtick_lab.append(t)
+    else:
 
-    # day
-    elif t.startswith("D"):
-
-        day_num = int(t.replace("D",""))
-
-        # subchronic
-        if study_type == "Subchronic":
-
-            if day_num == 1 or day_num % 10 == 0:
-
-                xtick_pos.append(i)
-                xtick_lab.append(str(day_num))
-
-        # chronic
-        else:
-
-            if day_num == 1 or day_num % 15 == 0:
-
-                xtick_pos.append(i)
-                xtick_lab.append(str(day_num))
-
-# apply
-ax.set_xticks(xtick_pos)
-
-ax.set_xticklabels(
-    xtick_lab,
-    rotation=45,
-    fontsize=8
-)
-
-ax.set_yticks(np.arange(len(df_heat)))
-ax.set_yticklabels(df_heat["Kategori"] + " - " + df_heat["Parameter"])
-
-ax.set_title("Clinical Observation Heatmap")
-
-# grid biar rapi
-ax.set_xticks(np.arange(-.5, len(times), 1), minor=True)
-ax.set_yticks(np.arange(-.5, len(df_heat), 1), minor=True)
-ax.grid(which="minor", color="gray", linestyle='-', linewidth=0.2)
-
-
-plt.tight_layout()
-
-st.pyplot(fig)
-plt.close(fig)
-
-# =========================
-# TEXT MATRIX (NO HEATMAP)
-# =========================
-fig2, ax = plt.subplots(figsize=(12,6), dpi=150)
-
-# kosongkan background
-ax.set_xlim(-0.5, len(times)-0.5)
-ax.set_ylim(len(df_heat)-0.5, -0.5)
-
-# =========================
-# TULIS TEXT TT / T
-# =========================
-for i in range(df_heat.shape[0]):
-    for j in range(len(times)):
-
-        raw_val = str(edited.iloc[i][times[j]]).strip().upper()
-
-        # LOGIKA BARU
-        if raw_val == "T":
-            display_val = "T"
-            color = "red"
-        else:
-            display_val = "TT"
-            color = "green"
-
-        ax.text(
-            j, i,
-            display_val,   # 🔥 pakai ini, bukan val
-            ha='center',
-            va='center',
-            fontsize=7,
-            fontweight='bold',
-            color=color
+        title_text = (
+            f"{chunk_times[0]} - "
+            f"{chunk_times[-1]}"
         )
 
+    st.markdown(f"### 🔥 {title_text}")
+
+    # =========================
+    # MATRIX
+    # =========================
+    heat_data = df_heat[
+        chunk_times
+    ].values
+
+    # =========================
+    # FIGURE
+    # =========================
+    fig, ax = plt.subplots(
+        figsize=(16,6),
+        dpi=150
+    )
+
+    im = ax.imshow(
+        heat_data,
+        aspect='auto'
+    )
+
+    # =========================
+    # COLOR
+    # =========================
+    from matplotlib.colors import ListedColormap
+
+    cmap = ListedColormap([
+        "green",
+        "red"
+    ])
+
+    im.set_cmap(cmap)
+
+    # =========================
+    # CUSTOM X LABEL
+    # =========================
+    xtick_pos = []
+    xtick_lab = []
+
+    for i, t in enumerate(chunk_times):
+
+        # 24h
+        if t == "24h":
+
+            xtick_pos.append(i)
+            xtick_lab.append("24h")
+
+        # day
+        elif t.startswith("D"):
+
+            day_num = int(
+                t.replace("D","")
+            )
+
+            # subchronic
+            if study_type == "Subchronic":
+
+                if (
+                    day_num == 1 or
+                    day_num % 10 == 0
+                ):
+
+                    xtick_pos.append(i)
+                    xtick_lab.append(
+                        str(day_num)
+                    )
+
+            # chronic
+            else:
+
+                if (
+                    day_num == 1 or
+                    day_num % 15 == 0
+                ):
+
+                    xtick_pos.append(i)
+                    xtick_lab.append(
+                        str(day_num)
+                    )
+
+    # apply
+    ax.set_xticks(xtick_pos)
+
+    ax.set_xticklabels(
+        xtick_lab,
+        rotation=45,
+        fontsize=8
+    )
+
+    # =========================
+    # Y LABEL
+    # =========================
+    ax.set_yticks(
+        np.arange(len(df_heat))
+    )
+
+    ax.set_yticklabels(
+        df_heat["Kategori"]
+        + " - "
+        + df_heat["Parameter"]
+    )
+
+    ax.set_title(
+        f"Clinical Observation Heatmap\n{title_text}"
+    )
+
+    # =========================
+    # GRID
+    # =========================
+    ax.set_xticks(
+        np.arange(-.5, len(chunk_times), 1),
+        minor=True
+    )
+
+    ax.set_yticks(
+        np.arange(-.5, len(df_heat), 1),
+        minor=True
+    )
+
+    ax.grid(
+        which="minor",
+        color="gray",
+        linestyle='-',
+        linewidth=0.2
+    )
+
+    plt.tight_layout()
+
+    st.pyplot(fig)
+
+    plt.close(fig)
+
 # =========================
-# AXIS LABEL
+# TEXT TABLE PER 30 HARI
 # =========================
-xtick_pos = []
-xtick_lab = []
+for chunk_idx, chunk_times in enumerate(time_chunks):
 
-for i, t in enumerate(times):
+    # =========================
+    # TITLE
+    # =========================
+    if chunk_idx == 0:
 
-    # hour time tetap tampil
-    if t in ["24h"]:
+        title_text = "24h Observation"
 
-        xtick_pos.append(i)
-        xtick_lab.append(t)
+    else:
 
-    # day
-    elif t.startswith("D"):
+        title_text = (
+            f"{chunk_times[0]} - "
+            f"{chunk_times[-1]}"
+        )
 
-        day_num = int(t.replace("D",""))
+    st.markdown(f"### 📋 {title_text}")
 
-        # subchronic
-        if study_type == "Subchronic":
+    # =========================
+    # FIGURE
+    # =========================
+    fig2, ax = plt.subplots(
+        figsize=(16,6),
+        dpi=150
+    )
 
-            if day_num == 1 or day_num % 10 == 0:
+    ax.set_xlim(
+        -0.5,
+        len(chunk_times)-0.5
+    )
 
-                xtick_pos.append(i)
-                xtick_lab.append(str(day_num))
+    ax.set_ylim(
+        len(df_heat)-0.5,
+        -0.5
+    )
 
-        # chronic
-        else:
+    # =========================
+    # TEXT LOOP
+    # =========================
+    for i in range(df_heat.shape[0]):
 
-            if day_num == 1 or day_num % 15 == 0:
+        for j in range(len(chunk_times)):
 
-                xtick_pos.append(i)
-                xtick_lab.append(str(day_num))
+            raw_val = str(
+                edited.iloc[i][chunk_times[j]]
+            ).strip().upper()
 
-# apply
-ax.set_xticks(xtick_pos)
+            if raw_val == "T":
 
-ax.set_xticklabels(
-    xtick_lab,
-    rotation=45,
-    fontsize=8
-)
+                display_val = "T"
+                color = "red"
 
-ax.set_yticks(np.arange(len(df_heat)))
-ax.set_yticklabels(df_heat["Kategori"] + " - " + df_heat["Parameter"])
+            else:
 
-# =========================
-# GRID (BIAR KAYA TABLE)
-# =========================
-ax.set_xticks(np.arange(-.5, len(times), 1), minor=True)
-ax.set_yticks(np.arange(-.5, len(df_heat), 1), minor=True)
-ax.grid(which="minor", color="gray", linestyle='-', linewidth=0.2)
+                display_val = "TT"
+                color = "green"
 
-ax.set_title("Clinical Observation Table")
+            ax.text(
+                j,
+                i,
+                display_val,
+                ha='center',
+                va='center',
+                fontsize=7,
+                fontweight='bold',
+                color=color
+            )
 
-plt.tight_layout()
+    # =========================
+    # X LABEL
+    # =========================
+    xtick_pos = []
+    xtick_lab = []
 
-st.pyplot(fig2)
-plt.close(fig2)
+    for i, t in enumerate(chunk_times):
+
+        if t == "24h":
+
+            xtick_pos.append(i)
+            xtick_lab.append("24h")
+
+        elif t.startswith("D"):
+
+            day_num = int(
+                t.replace("D","")
+            )
+
+            # subchronic
+            if study_type == "Subchronic":
+
+                if (
+                    day_num == 1 or
+                    day_num % 10 == 0
+                ):
+
+                    xtick_pos.append(i)
+                    xtick_lab.append(
+                        str(day_num)
+                    )
+
+            # chronic
+            else:
+
+                if (
+                    day_num == 1 or
+                    day_num % 15 == 0
+                ):
+
+                    xtick_pos.append(i)
+                    xtick_lab.append(
+                        str(day_num)
+                    )
+
+    ax.set_xticks(xtick_pos)
+
+    ax.set_xticklabels(
+        xtick_lab,
+        rotation=45,
+        fontsize=8
+    )
+
+    # =========================
+    # Y LABEL
+    # =========================
+    ax.set_yticks(
+        np.arange(len(df_heat))
+    )
+
+    ax.set_yticklabels(
+        df_heat["Kategori"]
+        + " - "
+        + df_heat["Parameter"]
+    )
+
+    # =========================
+    # GRID
+    # =========================
+    ax.set_xticks(
+        np.arange(-.5, len(chunk_times), 1),
+        minor=True
+    )
+
+    ax.set_yticks(
+        np.arange(-.5, len(df_heat), 1),
+        minor=True
+    )
+
+    ax.grid(
+        which="minor",
+        color="gray",
+        linestyle='-',
+        linewidth=0.2
+    )
+
+    ax.set_title(
+        f"Clinical Observation Table\n{title_text}"
+    )
+
+    plt.tight_layout()
+
+    st.pyplot(fig2)
+
+    plt.close(fig2)
