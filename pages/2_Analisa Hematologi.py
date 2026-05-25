@@ -9,13 +9,12 @@ st.title("📊 Hematology Analyzer (Raw Filter Mode)")
 # ===============================
 # 📥 UPLOAD
 # ===============================
-st.subheader("📥 Upload Data")
+st.subheader("📥 Upload Excel File")
 
-col1, col2 = st.columns(2)
-interim_file = col1.file_uploader("Interim", type=["xlsx","csv"])
-final_file   = col2.file_uploader("Final", type=["xlsx","csv"])
-
-sat_file = st.file_uploader("Satellite", type=["xlsx","csv"])
+uploaded_file = st.file_uploader(
+    "Upload Excel",
+    type=["xlsx", "csv"]
+)
 
 # ===============================
 # 🎯 TARGET KOLOM
