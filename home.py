@@ -73,6 +73,12 @@ if not st.session_state.authenticated:
     """)
     st.stop()
     
+st.sidebar.image(
+    "logo_iratco.png",
+    use_container_width=True
+)
+
+st.sidebar.markdown("---")
 
 # ===============================
 # MAIN APP (SETELAH LOGIN)
