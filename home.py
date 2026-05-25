@@ -73,9 +73,40 @@ if not st.session_state.authenticated:
     """)
     st.stop()
     
-st.sidebar.image(
-    "logo_iratco.png",
-    use_container_width=True
+# ===============================
+# SIDEBAR LOGO FIX
+# ===============================
+st.markdown("""
+<style>
+
+/* sidebar top spacing */
+section[data-testid="stSidebar"] > div {
+    padding-top: 1rem;
+}
+
+/* logo container */
+.sidebar-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* logo size */
+.sidebar-logo img {
+    width: 180px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# render logo
+st.sidebar.markdown(
+    """
+    <div class="sidebar-logo">
+        <img src="app/static/logo_iratco.png">
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 st.sidebar.markdown("---")
