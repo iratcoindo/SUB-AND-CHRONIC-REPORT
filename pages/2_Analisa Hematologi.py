@@ -332,6 +332,186 @@ if uploaded_file is not None:
                 use_container_width=True,
                 height=800
             )
+
+            # ===============================
+            # STATISTICAL ANALYSIS
+            # ===============================
+            import numpy as np
+            
+            st.markdown("---")
+            st.header("📊 Statistical Analysis")
+            
+            # pilih parameter
+            param = st.selectbox(
+                "Parameter Statistik",
+                TARGET_COLS,
+                key="stat_param"
+            )
+            
+            # ===============================
+            # FACET BY SEX
+            # ===============================
+            sexes = assigned_df["Sex"].dropna().unique()
+            
+            for sex in sexes:
+            
+                df_sex = assigned_df[
+                    assigned_df["Sex"] == sex
+                ].copy()
+            
+                if len(df_sex) == 0:
+                    continue
+            
+                st.markdown(f"## {sex}")
+            
+                # ===============================
+                # GROUP CHECK
+                # ===============================
+                if "Group" not in df_sex.columns:
+            
+                    st.warning("Group belum diassign")
+                    continue
+            
+                groups = sorted(
+                    df_sex["Group"].dropna().unique()
+                )
+            
+                if len(groups) < 2:
+            
+                    st.warning(
+                        f"{sex}: minimal 2 group diperlukan"
+                    )
+            
+                    continue
+            
+                # ===============================
+                # PREPARE DATA
+                # ===============================
+                data_groups = []
+            
+                for g in groups:
+            
+                    vals = df_sex[
+                        df_sex["Group"] == g
+                    ][param].dropna()
+            
+                    if len(vals) > 0:
+                        data_groups.append(vals)
+            
+                # ===============================
+                # NORMALITY TEST
+                # ===============================
+                st.subheader("Normality Test")
+            
+                normality_result = []
+            
+                all_normal = True
+            
+                for g in groups:
+            
+                    vals = df_sex[
+                        df_sex["Group"] == g
+                    ][param].dropna()
+            
+                    if len(vals) >= 3:
+            
+                        stat, p = stats.shapiro(vals)
+            
+                        if p < 0.05:
+                            normal = "No"
+                            all_normal = False
+                        else:
+                            normal = "Yes"
+            
+                        normality_result.append({
+                            "Group": g,
+                            "Shapiro p-value": round(p,5),
+                            "Normal": normal
+                        })
+            
+                normality_df = pd.DataFrame(
+                    normality_result
+                )
+            
+                st.dataframe(
+                    normality_df,
+                    use_container_width=True
+                )
+            
+                # ===============================
+                # EQUAL VARIANCE
+                # ===============================
+                st.subheader("Equal Variance Test")
+            
+                if len(data_groups) >= 2:
+            
+                    lev_stat, lev_p = stats.levene(
+                        *data_groups
+                    )
+            
+                    equal_variance = lev_p >= 0.05
+            
+                    variance_df = pd.DataFrame({
+                        "Levene p-value":[round(lev_p,5)],
+                        "Equal Variance":[
+                            "Yes" if equal_variance else "No"
+                        ]
+                    })
+            
+                    st.dataframe(
+                        variance_df,
+                        use_container_width=True
+                    )
+            
+                else:
+            
+                    equal_variance = False
+            
+                # ===============================
+                # STATISTICAL DECISION
+                # ===============================
+                st.subheader("Recommended Statistical Test")
+            
+                if all_normal and equal_variance:
+            
+                    if len(groups) == 2:
+                        recommended = "Independent T-Test"
+                    else:
+                        recommended = "One-Way ANOVA"
+            
+                else:
+            
+                    if len(groups) == 2:
+                        recommended = "Mann-Whitney U Test"
+                    else:
+                        recommended = "Kruskal-Wallis Test"
+            
+                decision_df = pd.DataFrame({
+                    "Sex":[sex],
+                    "Parameter":[param],
+                    "Recommended Test":[recommended]
+                })
+            
+                st.dataframe(
+                    decision_df,
+                    use_container_width=True
+                )
+            
+                # ===============================
+                # DESCRIPTIVE STATISTICS
+                # ===============================
+                st.subheader("Descriptive Statistics")
+            
+                desc = df_sex.groupby("Group")[param].agg(
+                    ["mean","std","median","min","max","count"]
+                )
+            
+                st.dataframe(
+                    desc,
+                    use_container_width=True
+                )
+
+        
         else:
 
             st.warning(
