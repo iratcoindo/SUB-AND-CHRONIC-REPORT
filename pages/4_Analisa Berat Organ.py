@@ -96,15 +96,15 @@ st.markdown("## 📊 Summary (Mean ± SD per Dose)")
 summary_table = []
 
 # reference dose (control)
-control_dose = min(df_calc["Dose (mg/kgBB)"].dropna().unique())
+control_dose = min(df_relative["Dose (mg/kgBB)"].dropna().unique())
 
-for d in sorted(df_calc["Dose (mg/kgBB)"].unique()):
+for d in sorted(df_relative["Dose (mg/kgBB)"].unique()):
 
     row = {"Kelompok": f"{int(d)} mg/kg BB"}
 
     for organ in organs:
 
-        vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
+        vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
 
         mean = np.mean(vals)
         std = np.std(vals)
@@ -116,7 +116,7 @@ for d in sorted(df_calc["Dose (mg/kgBB)"].unique()):
         # =========================
         if d != control_dose:
 
-            control_vals = df_calc[df_calc["Dose (mg/kgBB)"] == control_dose][f"{organ} (%)"].dropna()
+            control_vals = df_relative[df_relative["Dose (mg/kgBB)"] == control_dose][f"{organ} (%)"].dropna()
 
             if len(vals) > 1 and len(control_vals) > 1:
                 _, p = mannwhitneyu(control_vals, vals)
@@ -160,8 +160,8 @@ for organ in organs:
     groups_data = []
     dose_labels = []
 
-    for d in sorted(df_calc["Dose (mg/kgBB)"].unique()):
-        vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
+    for d in sorted(df_relative["Dose (mg/kgBB)"].unique()):
+        vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
 
         if len(vals) > 0:
             groups_data.append(vals)
@@ -175,13 +175,13 @@ for organ in organs:
 
         results = []
 
-        control_vals = df_calc[df_calc["Dose (mg/kgBB)"] == control_dose][f"{organ} (%)"].dropna()
+        control_vals = df_relative[df_relative["Dose (mg/kgBB)"] == control_dose][f"{organ} (%)"].dropna()
 
         for d in dose_labels:
             if d == control_dose:
                 continue
 
-            test_vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
+            test_vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
 
             if len(control_vals) > 1 and len(test_vals) > 1:
                 _, p = mannwhitneyu(control_vals, test_vals)
@@ -211,10 +211,10 @@ for organ in organs:
 
     means = []
     stds = []
-    doses_sorted = sorted(df_calc["Dose (mg/kgBB)"].unique())
+    doses_sorted = sorted(df_relative["Dose (mg/kgBB)"].unique())
 
     for d in doses_sorted:
-        vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
+        vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
 
         means.append(np.mean(vals))
         stds.append(np.std(vals))
@@ -228,7 +228,7 @@ for organ in organs:
     dose_labels = []
     
     for d in doses_sorted:
-        vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
+        vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
         if len(vals) > 0:
             groups_data.append(vals)
             dose_labels.append(d)
@@ -241,7 +241,7 @@ for organ in organs:
     
     # Pairwise vs control
     control_dose = min(doses_sorted)
-    control_vals = df_calc[df_calc["Dose (mg/kgBB)"] == control_dose][f"{organ} (%)"].dropna()
+    control_vals = df_relative[df_relative["Dose (mg/kgBB)"] == control_dose][f"{organ} (%)"].dropna()
     
     signif_dict = {}
     
@@ -249,7 +249,7 @@ for organ in organs:
         if d == control_dose:
             continue
     
-        test_vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
+        test_vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna()
     
         if len(control_vals) > 1 and len(test_vals) > 1:
             _, p = mannwhitneyu(control_vals, test_vals)
@@ -294,7 +294,7 @@ for organ in organs:
     # =========================
     for i, d in enumerate(doses_sorted):
     
-        vals = df_calc[df_calc["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna().values
+        vals = df_relative[df_relative["Dose (mg/kgBB)"] == d][f"{organ} (%)"].dropna().values
     
         if len(vals) > 0:
     
