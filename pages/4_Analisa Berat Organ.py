@@ -58,19 +58,38 @@ edited_df = st.data_editor(
 
 st.markdown("## ⚖️ Relative Organ Weight (%BB)")
 
-organs = [ "Jantung", "Paru-paru","Hati", "Ginjal Kanan", "Ginjal Kiri","Limpa" ]
+organs = [
+    "Jantung",
+    "Paru-paru",
+    "Hati",
+    "Ginjal Kanan",
+    "Ginjal Kiri",
+    "Limpa"
+]
 
 df_calc = edited_df.copy()
 
-# convert ke numeric
 for col in ["Berat Badan"] + organs:
-    df_calc[col] = pd.to_numeric(df_calc[col], errors="coerce")
+    df_calc[col] = pd.to_numeric(
+        df_calc[col],
+        errors="coerce"
+    )
 
-# hitung %
+# tabel baru hanya berisi persen
+df_relative = df_calc[
+    ["Dose (mg/kgBB)", "ID Hewan"]
+].copy()
+
 for organ in organs:
-    df_calc[f"{organ} (%)"] = (df_calc[organ] / df_calc["Berat Badan"]) * 100
+    df_relative[f"{organ} (%)"] = (
+        df_calc[organ]
+        / df_calc["Berat Badan"]
+    ) * 100
 
-st.dataframe(df_calc, use_container_width=True)
+st.dataframe(
+    df_relative.round(3),
+    use_container_width=True
+)
 
 st.markdown("## 📊 Summary (Mean ± SD per Dose)")
 
