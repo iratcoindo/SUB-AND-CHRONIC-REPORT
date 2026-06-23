@@ -10,22 +10,31 @@ st.title("🧪 OECD Clinical Observation Input")
 # =========================
 study_type = st.selectbox(
     "Study Type",
-    ["Subchronic", "Chronic"]
+    ["Acute", "Subchronic", "Chronic"]
 )
 
 # =========================
 # TIMEPOINT
 # =========================
-if study_type == "Subchronic":
+if study_type == "Acute":
 
     times = [
-        "30m","1h","2h","4h","12h","16h","20h","24h"
+        "30m", "1h", "2h", "4h",
+        "12h", "16h", "20h", "24h"
+    ] + [f"D{i}" for i in range(2,15)]
+
+elif study_type == "Subchronic":
+
+    times = [
+        "30m", "1h", "2h", "4h",
+        "12h", "16h", "20h", "24h"
     ] + [f"D{i}" for i in range(2,119)]
 
-else:
+else:  # Chronic
 
     times = [
-        "30m","1h","2h","4h","12h","16h","20h","24h"
+        "30m", "1h", "2h", "4h",
+        "12h", "16h", "20h", "24h"
     ] + [f"D{i}" for i in range(2,299)]
 
 # =========================
