@@ -64,12 +64,7 @@ if not st.session_state.authenticated:
     # FOOTER
     st.markdown("""
     © 2026 Mawar Subangkit  
-    **Data Statistical Analysis Platform**  
-    
-    If you use this software, please cite:
-    
-    **Subangkit**, MAWAR (2026)  
-    iRATco Data Statistical Analysis Platform
+    **Scientific Data Analysis Platform**  
     """)
     st.stop()
     
